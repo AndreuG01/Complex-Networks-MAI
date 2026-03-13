@@ -1,0 +1,44 @@
+
+############ Characterization of net1.net ############
+Number of nodes: 5000
+Number of edges: 25000
+Max degree: 16
+Min degree: 6
+Average degree: 10.0
+Average clustering coefficient: 0.4141
+Degree assortativity: -0.00973282948611821
+Average shortest path length: 5.1211
+Diameter: 8
+
+############ Characterization of net2.net ############
+Number of nodes: 5000
+Number of edges: 24873
+Max degree: 24
+Min degree: 1
+Average degree: 9.9492
+Average clustering coefficient: 0.0021
+Degree assortativity: -0.005662570648240358
+Average shortest path length: 3.956
+Diameter: 7
+
+############ Characterization of net3.net ############
+Number of nodes: 5000
+Number of edges: 23508
+Max degree: 732
+Min degree: 3
+Average degree: 9.4032
+Average clustering coefficient: 0.0862
+Degree assortativity: -0.1338595315237447
+Average shortest path length: 3.0082
+Diameter: 5
+
+############ Characterization of net4.net ############
+Number of nodes: 5000
+Number of edges: 24975
+Max degree: 210
+Min degree: 5
+Average degree: 9.99
+Average clustering coefficient: 0.0107
+Degree assortativity: -0.032450672101984074
+Average shortest path length: 3.4868
+Diameter: 5
