@@ -1,0 +1,109 @@
+############ Microscopic description of net1.net ############
+
+Top 5 nodes by Degree Centrality:
+  1693: 0.0032
+  651: 0.0030
+  1579: 0.0030
+  4891: 0.0030
+  41: 0.0028
+
+Top 5 nodes by Betweenness Centrality:
+  4747: 0.0041
+  2645: 0.0040
+  230: 0.0038
+  4360: 0.0038
+  1579: 0.0037
+
+Top 5 nodes by Eigenvector Centrality:
+  651: 0.0287
+  1937: 0.0265
+  4526: 0.0257
+  4398: 0.0253
+  1939: 0.0252
+
+############ Microscopic description of net2.net ############
+
+Top 5 nodes by Degree Centrality:
+  1581: 0.0048
+  787: 0.0046
+  52: 0.0042
+  1990: 0.0042
+  2372: 0.0042
+
+Top 5 nodes by Betweenness Centrality:
+  1581: 0.0033
+  787: 0.0026
+  4382: 0.0025
+  52: 0.0023
+  2375: 0.0023
+
+Top 5 nodes by Eigenvector Centrality:
+  1581: 0.0412
+  3233: 0.0344
+  787: 0.0341
+  2375: 0.0338
+  131: 0.0336
+
+############ Microscopic description of net3.net ############
+
+Top 5 nodes by Degree Centrality:
+  5: 0.1464
+  7: 0.1382
+  2: 0.1252
+  0: 0.1240
+  6: 0.1110
+
+Top 5 nodes by Betweenness Centrality:
+  5: 0.1378
+  7: 0.1277
+  0: 0.1113
+  2: 0.1093
+  6: 0.0943
+
+Top 5 nodes by Eigenvector Centrality:
+  5: 0.2592
+  5: 0.1378
+  7: 0.1277
+  0: 0.1113
+  2: 0.1093
+  6: 0.0943
+
+Top 5 nodes by Eigenvector Centrality:
+  5: 0.2592
+  0: 0.1113
+  2: 0.1093
+  6: 0.0943
+
+Top 5 nodes by Eigenvector Centrality:
+  5: 0.2592
+
+Top 5 nodes by Eigenvector Centrality:
+  5: 0.2592
+  5: 0.2592
+  7: 0.2417
+  2: 0.2254
+  0: 0.2254
+  3: 0.2070
+
+############ Microscopic description of net4.net ############
+
+Top 5 nodes by Degree Centrality:
+  6: 0.0420
+  0: 0.0412
+  9: 0.0408
+  10: 0.0326
+  8: 0.0324
+
+Top 5 nodes by Betweenness Centrality:
+  0: 0.0605
+  6: 0.0576
+  9: 0.0553
+  8: 0.0391
+  3: 0.0379
+
+Top 5 nodes by Eigenvector Centrality:
+  6: 0.2240
+  0: 0.2234
+  9: 0.2062
+  8: 0.1741
+  3: 0.1686
