@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
+from tqdm.asyncio import tqdm
+from utils import extract_filename_info, generate_colormap
 import matplotlib.pyplot as plt
-from matplotlib import rcParams
-from matplotlib import colors
+import matplotlib
 import networkx as nx
 from collections import Counter
 import glob
@@ -10,86 +11,152 @@ import os
 import re
 import infomap as im
 
-rcParams['figure.figsize'] = (5, 5)
-rcParams['font.size']=16
+plt.rcParams.update({
+    "text.usetex": True
+})
+
+def match_communities(reference_comms, target_comms):
+    ref_sets = [set(c) for c in reference_comms]
+    tgt_sets = [set(c) for c in target_comms]
+
+    mapping = {}
+    used_ref = set()
+
+    for i, tgt in enumerate(tgt_sets):
+        best_j = None
+        best_score = -1.0
+
+        for j, ref in enumerate(ref_sets):
+            if j in used_ref:
+                continue
+
+            union = len(tgt | ref)
+            if union == 0:
+                continue
+
+            score = len(tgt & ref) / union
+
+            if score > best_score:
+                best_score = score
+                best_j = j
+
+        if best_j is not None:
+            mapping[i] = best_j
+            used_ref.add(best_j)
+        else:
+            mapping[i] = i
+
+    return mapping
+
+
+def reorder_communities(reference_comms, target_comms):
+    mapping = match_communities(reference_comms, target_comms)
+
+    reordered = [None] * max(len(reference_comms), len(target_comms))
+
+    for i, comm in enumerate(target_comms):
+        new_idx = mapping.get(i, i)
+        if new_idx >= len(reordered):
+            reordered.extend([None] * (new_idx - len(reordered) + 1))
+        reordered[new_idx] = comm
+
+    return [c for c in reordered if c is not None]
 
 
 
-def plot_degree_distribution(G,scale='linear',rep='bars',weight=False, filepath = None, prr=None):
-    if(weight==False):
-        degree_sequence=[G.degree(node) for node in G.nodes()]
-    else:
-        degree_sequence=[G.degree(node,weight='weight') for node in G.nodes()]
+def plot_degree_distributions(
+    G, filepath=None, prr=None, out_path=None, savefig=True, show_fig=False
+):
+    degree_sequence = [degree for _, degree in G.degree()]
+
+    fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+    bins = np.arange(min(degree_sequence), max(degree_sequence) + 2) - 0.5
+    ax.hist(degree_sequence, bins=bins, edgecolor='black', color="blue")
+
+    ax.set_xlabel("Degree")
+    ax.set_ylabel("Nodes")
+
+    if prr is not None:
+        ax.set_title(f'prr = {prr}')
+
+    fig.tight_layout()
+
+    if savefig:
         
-    degree_counts = Counter(degree_sequence)
-    min_degree=min(degree_sequence)
-    max_degree=max(degree_sequence)
+        plot_name = f'prr_{prr}_degree_distribution.png'
+        plt.savefig(os.path.join(out_path, plot_name), dpi=300, bbox_inches='tight')
 
-    degrees=list(degree_counts.keys())
-    degree_count=list(degree_counts.values())
-
-    fig,ax=plt.subplots(1,1,figsize=(5,5))
-    if rep=='bars':
-        ax.bar(degrees,degree_count)
-    if rep=='scatter':
-        ax.scatter(degrees,degree_count)
-    
-    if scale=='log':
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-
-    if(weight==False):
-        ax.set_xlabel('Degree',fontsize=15)
-    else:
-        ax.set_xlabel('Strength',fontsize=15)
-    ax.set_ylabel('#nodes',fontsize=15)
-    ax.tick_params(which='major',axis='both',labelsize=15)  
-
-    if prr_value is not None:
-        ax.set_title(f'prr = {prr}', fontsize=16)  
-
-    if filepath:
-        save_dir = 'deg_distr'
-        os.makedirs(save_dir, exist_ok=True)
-        base_filename = os.path.basename(filepath)
-        new_filename = base_filename.replace('.net', '_degree_distribution.png')
-        save_path = os.path.join(save_dir, new_filename)
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        plt.close(fig)
-    else:
+    if show_fig:
         plt.show()
 
-def visualize_network(G, pos, filepath=None, prr=None):
+    plt.close(fig)
+
+def visualize_network(
+    G,
+    pos,
+    out_path: str,
+    savefig: bool = True,
+    show_fig: bool = False,
+    prr=None,
+    communities: list[list[int]] = None,
+    max_communities: int = 20
+):
     fig, ax = plt.subplots(figsize=(5, 5))
 
-    # sizes = [10 + 5 * G.degree(node, weight='weight') for node in G.nodes()]
-
-    nx.draw(G, pos, ax=ax, with_labels=False, node_color='blue', edge_color='gray', node_size=20)
-    
-    if prr is not None:
-        ax.set_title(f'prr = {prr}', fontsize=16)  
-
-    if filepath:
-        save_dir = 'initial_network_visualizations'
-        os.makedirs(save_dir, exist_ok=True)
-        base_filename = os.path.basename(filepath)
-        new_filename = base_filename.replace('.net', '_visualization.png')
-        save_path = os.path.join(save_dir, new_filename)
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        plt.close(fig)
+    if communities is None:
+        nx.draw(
+            G, pos, ax=ax,
+            with_labels=False,
+            node_color="blue",
+            edge_color="gray",
+            node_size=20,
+            width=0.1
+        )
     else:
+        community_index = {}
+        for i, comm in enumerate(communities):
+            for node in comm:
+                community_index[node] = i
+
+        color_nodes = [community_index[node] for node in G.nodes()]
+
+        cmap = generate_colormap()
+        norm = plt.Normalize(vmin=0, vmax=max_communities - 1)
+
+        nx.draw(
+            G, pos, ax=ax,
+            with_labels=False,
+            node_color=color_nodes,
+            cmap=cmap,
+            edge_color="lightgrey",
+            node_size=20,
+            width=0.1,
+            vmin=0,
+            vmax=max_communities - 1
+        )
+
+
+    if communities is not None:
+        ax.set_title(f"prr = {prr}. {len(communities)} {'communities' if len(communities) != 1 else 'community'} detected.")
+    else:
+        ax.set_title(f"prr = {prr}")
+
+    if savefig:
+        plt.savefig(os.path.join(out_path, f"prr_{prr}.png"), dpi=300, bbox_inches="tight")
+
+    if show_fig:
         plt.show()
 
-import infomap as im # Make sure this is installed: pip install infomap
+    plt.close(fig)
+
+
 
 def detect_communities(G, pos, filepath=None, prr=None, algorithm_name='louvain'):
-
-    # Community detection algorithms in NetworkX require standard simple Graphs
-    G_simple = nx.Graph(G)
+    G_simple = G
     
-    # RUN COMMUNITY DETECTION ALGORITHM
+    communities = []
     if algorithm_name.lower() == 'greedy':
-        communities = list(nx.community.greedy_modularity_communities(G_simple))
+        communities = [list(com) for com in nx.community.greedy_modularity_communities(G_simple)]
         
     elif algorithm_name.lower() == 'louvain':
         modularity_louvain = -1
@@ -100,7 +167,7 @@ def detect_communities(G, pos, filepath=None, prr=None, algorithm_name='louvain'
             if mod > modularity_louvain:
                 modularity_louvain = mod
                 best_communities_louvain = comms
-        communities = best_communities_louvain
+        communities = [list(com) for com in best_communities_louvain]
         
     elif algorithm_name.lower() == 'infomap':
         # Infomap expects integer node IDs, so we map string IDs to integers and back
@@ -121,112 +188,118 @@ def detect_communities(G, pos, filepath=None, prr=None, algorithm_name='louvain'
                 if module not in comm_dict:
                     comm_dict[module] = set()
                 comm_dict[module].add(nx_node)
-        communities = list(comm_dict.values())
-        
-    else:
-        print(f"Algorithm '{algorithm_name}' not recognized.")
-        return
+        communities = [list(com) for com in comm_dict.values()]
+    
+    # Ensure every node is assigned.
+    # If there are some nodes that are isolated, some algorithms might not assign them to any community.
+    # We will put them in their own singleton communities.
+    assigned_nodes = [node for comm in communities for node in comm]
+    missing_nodes = [node for node in G_simple.nodes() if node not in set(assigned_nodes)]
+    if missing_nodes:
+        communities.extend([[node] for node in missing_nodes])
+        assigned_nodes = [node for comm in communities for node in comm]
+
+
+    return communities
 
     # CALCULATE MODULARITY
     num_communities = len(communities)
     modularity = nx.community.modularity(G_simple, communities)
     
-    # SAVE TO TEXT FILE
-    metrics_file = f'community_metrics_{algorithm_name.lower()}.txt'
     
-    file_exists = os.path.isfile(metrics_file)
-    
-    with open(metrics_file, 'a') as f:
-                    
-        f.write(f"{prr}\t{num_communities}\t{modularity:.4f}\n")
-        
-    # 4. VISUALIZE AND SAVE PLOT
-    # Create a dictionary mapping each node to its community index for coloring
-    community_index = {}
-    for i, comm in enumerate(communities):
-        for node in comm:
-            community_index[node] = i
-            
-    # List of colors for nodes in exactly the same order as G.nodes()
-    color_nodes = [community_index[node] for node in G.nodes()]
-    
-    fig, ax = plt.subplots(figsize=(5, 5))
-    # sizes = [15 + 3 * G_simple.degree(node) for node in G_simple.nodes()]
-    
-    # cmap=plt.cm.tab20 gives us up to 20 highly distinct colors for communities
-    nx.draw(G_simple, pos, ax=ax, with_labels=False, node_color=color_nodes, 
-            cmap=plt.cm.tab20, edge_color='lightgrey', node_size=20)
-            
-    if prr is not None:
-        ax.set_title(f'{algorithm_name.capitalize()} (prr = {prr})', fontsize=16)
-        
-    ax.margins(0.10)
-    
-    if filepath:
-        save_dir = f'community_visualizations_{algorithm_name.lower()}'
-        os.makedirs(save_dir, exist_ok=True)
-        base_filename = os.path.basename(filepath)
-        new_filename = base_filename.replace('.net', f'_{algorithm_name}_communities.png')
-        save_path = os.path.join(save_dir, new_filename)
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        plt.close(fig)
-    else:
-        plt.show()
-        plt.close(fig)
 
 def plot_communities_evolution():
     pass
 
+DATA_PATH = "data"
+SYNTHETIC_NETWORKS = "synthetic"
+PRIMARY_SCHOOL_NETWORKS = "primary_school"
+ASSETS = "assets"
+os.makedirs(ASSETS, exist_ok=True)
+INITIAL_NETWORK_VISUALIZATIONS = os.path.join(ASSETS, "initial_network_visualizations")
+os.makedirs(INITIAL_NETWORK_VISUALIZATIONS, exist_ok=True)
 
-data_path = directory_path = r'data/A3_synthetic_networks'
+DEGREE_DISTRIBUTION_PLOTS = os.path.join(ASSETS, "degree_distribution_plots")
+os.makedirs(DEGREE_DISTRIBUTION_PLOTS, exist_ok=True)
 
-file_pattern = os.path.join(directory_path, '*.net')
-network_files = glob.glob(file_pattern)
+GREEDY_COMMUNITY_VISUALIZATIONS = os.path.join(ASSETS, "greedy_community_visualizations")
+os.makedirs(GREEDY_COMMUNITY_VISUALIZATIONS, exist_ok=True)
 
-reference_pos = None
+LOUVAIN_COMMUNITY_VISUALIZATIONS = os.path.join(ASSETS, "louvain_community_visualizations")
+os.makedirs(LOUVAIN_COMMUNITY_VISUALIZATIONS, exist_ok=True)
 
-for file_path in network_files:
-    match = re.search(r'prr_([0-9.]+)', file_path)
-    if match and float(match.group(1)) == 1.0:
-        print(f"Calculating reference layout using: {os.path.basename(file_path)}")
-        G_ref = nx.read_pajek(file_path)
-        # We calculate the layout once here. seed=42 ensures it's perfectly reproducible.
-        reference_pos = nx.spring_layout(G_ref, seed=42) 
-        break
+INFOMAP_COMMUNITY_VISUALIZATIONS = os.path.join(ASSETS, "infomap_community_visualizations")
+os.makedirs(INFOMAP_COMMUNITY_VISUALIZATIONS, exist_ok=True)
 
-# Fallback just in case prr=1.00 is missing from your folder
-if reference_pos is None:
-    print("Warning: prr=1.00 network not found! Using the last network as layout reference.")
-    G_ref = nx.read_pajek(network_files[-1])
-    reference_pos = nx.spring_layout(G_ref, seed=42)
+if __name__ == "__main__":
+    synth_net_path = os.path.join(DATA_PATH, SYNTHETIC_NETWORKS)
 
+    reference_pos = None
 
-# 2. RUN MAIN LOOP USING REFERENCE POSITIONS
-for file_path in network_files:
-    match = re.search(r'prr_([0-9.]+)', file_path)
-    
-    if match:
-        prr_value = match.group(1)
+    file = sorted(os.listdir(synth_net_path))[-1]
+    filename = os.path.splitext(file)[0] # Remove the filename extension
+    print(f"Calculating reference layout using: {file}")
+    G_ref = nx.read_pajek(os.path.join(synth_net_path, file))
+    reference_pos = nx.spring_layout(G_ref, seed=42) 
+
+    files = sorted(os.listdir(synth_net_path))
+    max_communities = 0
+    for file in tqdm(files, desc="Processing synthetic networks", total=len(files)):
+        filename = os.path.splitext(file)[0]
+        prr_value = extract_filename_info(filename).get('prr', None)    
+        G = nx.read_pajek(os.path.join(synth_net_path, file))
+
+        # visualize_network(
+        #     G, pos=reference_pos,
+        #     out_path=INITIAL_NETWORK_VISUALIZATIONS,
+        #     savefig=True,
+        #     show_fig=False,
+        #     prr=prr_value
+        # )
         
-        G = nx.read_pajek(file_path)
+        # plot_degree_distributions(
+        #     G,
+        #     filepath=file,
+        #     out_path=DEGREE_DISTRIBUTION_PLOTS,
+        #     savefig=True,
+        #     show_fig=False,
+        #     prr=prr_value,
+        # )
+
+        communities_greedy = detect_communities(G, pos=reference_pos, filepath=file, prr=prr_value, algorithm_name='greedy')
+        communities_louvain = detect_communities(G, pos=reference_pos, filepath=file, prr=prr_value, algorithm_name='louvain')
+        communities_infomap = detect_communities(G, pos=reference_pos, filepath=file, prr=prr_value, algorithm_name='infomap')
         
-        print(f"***** prr = {prr_value} *****")
-        print(f"Number of nodes: {G.number_of_nodes()}")
-        print(f"Number of edges: {G.number_of_edges()}\n")
-
-        # plot_degree_distribution(G, scale='linear', rep='bars', weight=False, filepath=file_path, prr=prr_value)
-
+        # Align community indices across algorithms for better visual comparison
+        communities_louvain = reorder_communities(communities_greedy, communities_louvain)
+        communities_infomap = reorder_communities(communities_greedy, communities_infomap)
         
-        # visualize_network(G, pos=reference_pos, filepath=file_path, prr=prr_value)
-
-        detect_communities(G, pos=reference_pos, filepath=file_path, prr=prr_value, algorithm_name='greedy')
-        # s'ha d'arreglar que els colors es mantinguin quan anem canviant de prr
-
-
-        # detect_communities(G, pos=reference_pos, filepath=file_path, prr=prr_value, algorithm_name='louvain')
-        # detect_communities(G, pos=reference_pos, filepath=file_path, prr=prr_value, algorithm_name='infomap')
-        # break
-    
+        # visualize_network(
+        #     G, pos=reference_pos,
+        #     out_path=GREEDY_COMMUNITY_VISUALIZATIONS,
+        #     savefig=True,
+        #     show_fig=False,
+        #     prr=prr_value,
+        #     communities=communities_greedy
+        # )
+        # visualize_network(
+        #     G, pos=reference_pos,
+        #     out_path=LOUVAIN_COMMUNITY_VISUALIZATIONS,
+        #     savefig=True,
+        #     show_fig=False,
+        #     prr=prr_value,
+        #     communities=communities_louvain
+        # )
+        
+        # visualize_network(
+        #     G, pos=reference_pos,
+        #     out_path=INFOMAP_COMMUNITY_VISUALIZATIONS,
+        #     savefig=True,
+        #     show_fig=False,
+        #     prr=prr_value,
+        #     communities=communities_infomap
+        # )
         
         
-
+            
+        
