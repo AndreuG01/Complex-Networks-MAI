@@ -28,7 +28,49 @@ def generate_colormap():
     return ListedColormap(colors)
     
     
+def match_communities(reference_comms, target_comms):
+    ref_sets = [set(c) for c in reference_comms]
+    tgt_sets = [set(c) for c in target_comms]
+
+    mapping = {}
+    used_ref = set()
+
+    for i, tgt in enumerate(tgt_sets):
+        best_j = None
+        best_score = -1.0
+
+        for j, ref in enumerate(ref_sets):
+            if j in used_ref:
+                continue
+
+            union = len(tgt | ref)
+            if union == 0:
+                continue
+
+            score = len(tgt & ref) / union
+
+            if score > best_score:
+                best_score = score
+                best_j = j
+
+        if best_j is not None:
+            mapping[i] = best_j
+            used_ref.add(best_j)
+        else:
+            mapping[i] = i
+
+    return mapping
 
 
-if __name__ == "__main__":
-    pass
+def reorder_communities(reference_comms, target_comms):
+    mapping = match_communities(reference_comms, target_comms)
+
+    reordered = [None] * max(len(reference_comms), len(target_comms))
+
+    for i, comm in enumerate(target_comms):
+        new_idx = mapping.get(i, i)
+        if new_idx >= len(reordered):
+            reordered.extend([None] * (new_idx - len(reordered) + 1))
+        reordered[new_idx] = comm
+
+    return [c for c in reordered if c is not None]

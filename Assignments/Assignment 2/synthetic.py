@@ -1,14 +1,10 @@
 import pandas as pd
 import numpy as np
 from tqdm.asyncio import tqdm
-from utils import extract_filename_info, generate_colormap
+from utils import extract_filename_info, generate_colormap, match_communities, reorder_communities
 import matplotlib.pyplot as plt
-import matplotlib
 import networkx as nx
-from collections import Counter
-import glob
 import os
-import re
 import math
 import infomap as im
 from cdlib import NodeClustering
@@ -17,53 +13,6 @@ from cdlib.evaluation import normalized_mutual_information, variation_of_informa
 plt.rcParams.update({
     "text.usetex": True
 })
-
-def match_communities(reference_comms, target_comms):
-    ref_sets = [set(c) for c in reference_comms]
-    tgt_sets = [set(c) for c in target_comms]
-
-    mapping = {}
-    used_ref = set()
-
-    for i, tgt in enumerate(tgt_sets):
-        best_j = None
-        best_score = -1.0
-
-        for j, ref in enumerate(ref_sets):
-            if j in used_ref:
-                continue
-
-            union = len(tgt | ref)
-            if union == 0:
-                continue
-
-            score = len(tgt & ref) / union
-
-            if score > best_score:
-                best_score = score
-                best_j = j
-
-        if best_j is not None:
-            mapping[i] = best_j
-            used_ref.add(best_j)
-        else:
-            mapping[i] = i
-
-    return mapping
-
-
-def reorder_communities(reference_comms, target_comms):
-    mapping = match_communities(reference_comms, target_comms)
-
-    reordered = [None] * max(len(reference_comms), len(target_comms))
-
-    for i, comm in enumerate(target_comms):
-        new_idx = mapping.get(i, i)
-        if new_idx >= len(reordered):
-            reordered.extend([None] * (new_idx - len(reordered) + 1))
-        reordered[new_idx] = comm
-
-    return [c for c in reordered if c is not None]
 
 
 def get_synthetic_ground_truth_partition(nodes, n_blocks: int):
@@ -308,9 +257,7 @@ def plot_metrics_evolution(metrics, show_fig=True, savefig=False, out_path=None,
         plt.show()
 
 DATA_PATH = "data"
-# DATA_PATH = "Assignments/Assignment 2/data"
 SYNTHETIC_NETWORKS = "synthetic"
-PRIMARY_SCHOOL_NETWORKS = "primary_school"
 ASSETS = "assets"
 os.makedirs(ASSETS, exist_ok=True)
 INITIAL_NETWORK_VISUALIZATIONS = os.path.join(ASSETS, "initial_network_visualizations")
