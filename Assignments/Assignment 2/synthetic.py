@@ -9,7 +9,10 @@ from collections import Counter
 import glob
 import os
 import re
+import math
 import infomap as im
+from cdlib import NodeClustering
+from cdlib.evaluation import normalized_mutual_information, variation_of_information
 
 plt.rcParams.update({
     "text.usetex": True
@@ -61,6 +64,86 @@ def reorder_communities(reference_comms, target_comms):
         reordered[new_idx] = comm
 
     return [c for c in reordered if c is not None]
+
+
+def get_synthetic_ground_truth_partition(nodes, n_blocks: int):
+    
+    nodes_int = sorted(int(node) for node in nodes)
+    n_nodes = len(nodes_int)
+    if n_nodes == 0:
+        return []
+
+    block_size = n_nodes // n_blocks
+
+    communities = [[] for _ in range(n_blocks)]
+    for node in nodes_int:
+        block_idx = min((node - 1) // block_size, n_blocks - 1)
+        communities[block_idx].append(str(node))
+
+    return communities
+
+
+def partition_to_labels(nodes, communities, partition_name="partition"):
+    node_order = sorted(nodes, key=lambda x: int(x))
+    node_to_comm = {}
+
+    for comm_idx, comm in enumerate(communities):
+        for node in comm:
+            node_key = str(node)
+            node_to_comm[node_key] = comm_idx
+
+    labels = np.array([node_to_comm[str(node)] for node in node_order], dtype=np.int64)
+    return labels
+
+
+def partition_jaccard_index(labels_true, labels_pred):
+    n = len(labels_pred)
+
+    intersection = 0
+    union = 0
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            same_pred = labels_pred[i] == labels_pred[j]
+            same_true = labels_true[i] == labels_true[j]
+
+            if same_pred or same_true:
+                union += 1
+                if same_pred and same_true:
+                    intersection += 1
+
+    if union == 0:
+        return 1.0
+
+    return intersection / union
+
+
+def communities_to_node_clustering(communities):
+    # As the community detection is not done using the cdlib library, the communities need to be converted into the format
+    # so that the evaluation metrics from cdlib can be used.
+    return NodeClustering(
+        communities=[[str(node) for node in comm] for comm in communities],
+        graph=None,
+        method_name="partition",
+    )
+
+
+def partition_normalized_mutual_information(true_partition, predicted_partition):
+    result = normalized_mutual_information(
+        communities_to_node_clustering(true_partition),
+        communities_to_node_clustering(predicted_partition)
+    )
+    return float(result.score)
+
+
+def partition_normalized_variation_of_information(true_partition, predicted_partition, n_nodes: int):
+    
+    result = variation_of_information(
+        communities_to_node_clustering(true_partition),
+        communities_to_node_clustering(predicted_partition)
+    )
+    nvi = float(result.score) / math.log(n_nodes)
+    return float(np.clip(nvi, 0.0, 1.0))
 
 
 
@@ -151,19 +234,17 @@ def visualize_network(
 
 
 
-def detect_communities(G, pos, filepath=None, prr=None, algorithm_name='louvain'):
-    G_simple = G
-    
+def detect_communities(G, algorithm_name='louvain'):    
     communities = []
     if algorithm_name.lower() == 'greedy':
-        communities = [list(com) for com in nx.community.greedy_modularity_communities(G_simple)]
+        communities = [list(com) for com in nx.community.greedy_modularity_communities(G)]
         
     elif algorithm_name.lower() == 'louvain':
         modularity_louvain = -1
         best_communities_louvain = None
         for realization in range(10):
-            comms = nx.community.louvain_communities(G_simple, seed=realization)
-            mod = nx.community.modularity(G_simple, comms)
+            comms = nx.community.louvain_communities(G, seed=realization)
+            mod = nx.community.modularity(G, comms)
             if mod > modularity_louvain:
                 modularity_louvain = mod
                 best_communities_louvain = comms
@@ -171,11 +252,11 @@ def detect_communities(G, pos, filepath=None, prr=None, algorithm_name='louvain'
         
     elif algorithm_name.lower() == 'infomap':
         # Infomap expects integer node IDs, so we map string IDs to integers and back
-        mapping = {node: i for i, node in enumerate(G_simple.nodes())}
+        mapping = {node: i for i, node in enumerate(G.nodes())}
         reverse_mapping = {i: node for node, i in mapping.items()}
         
         im_model = im.Infomap(silent=True)
-        for u, v in G_simple.edges():
+        for u, v in G.edges():
             im_model.add_link(mapping[u], mapping[v])
         im_model.run()
         
@@ -194,7 +275,7 @@ def detect_communities(G, pos, filepath=None, prr=None, algorithm_name='louvain'
     # If there are some nodes that are isolated, some algorithms might not assign them to any community.
     # We will put them in their own singleton communities.
     assigned_nodes = [node for comm in communities for node in comm]
-    missing_nodes = [node for node in G_simple.nodes() if node not in set(assigned_nodes)]
+    missing_nodes = [node for node in G.nodes() if node not in set(assigned_nodes)]
     if missing_nodes:
         communities.extend([[node] for node in missing_nodes])
         assigned_nodes = [node for comm in communities for node in comm]
@@ -202,16 +283,32 @@ def detect_communities(G, pos, filepath=None, prr=None, algorithm_name='louvain'
 
     return communities
 
-    # CALCULATE MODULARITY
+    
+def community_metrics(G, communities):
     num_communities = len(communities)
-    modularity = nx.community.modularity(G_simple, communities)
-    
-    
+    modularity = nx.community.modularity(G, communities)
+    return num_communities, modularity
 
-def plot_communities_evolution():
-    pass
+def plot_metrics_evolution(metrics, show_fig=True, savefig=False, out_path=None, metric_name: str="Number of communities"):
+    ordered_prr = sorted(metrics.keys())
+    fig = plt.figure(figsize=(7, 5))
+    plt.title(f"{metric_name} vs prr")
+    plt.plot(ordered_prr, [metrics[k]["greedy"] for k in ordered_prr], label='Greedy', color=custom_cmap(0))
+    plt.plot(ordered_prr, [metrics[k]["louvain"] for k in ordered_prr], label='Louvain', color=custom_cmap(1), linestyle="--")
+    plt.plot(ordered_prr, [metrics[k]["infomap"] for k in ordered_prr], label='Infomap', color=custom_cmap(2), linestyle=":")
+    plt.xlabel("prr")
+    plt.grid(alpha=0.2)
+    plt.ylabel(metric_name)
+    plt.legend()
+    plt.tight_layout()
+    
+    if savefig and out_path:
+        plt.savefig(os.path.join(out_path, f"{metric_name.lower().replace(' ', '_')}.png"), dpi=300, bbox_inches='tight')
+    if show_fig:
+        plt.show()
 
 DATA_PATH = "data"
+# DATA_PATH = "Assignments/Assignment 2/data"
 SYNTHETIC_NETWORKS = "synthetic"
 PRIMARY_SCHOOL_NETWORKS = "primary_school"
 ASSETS = "assets"
@@ -232,6 +329,8 @@ INFOMAP_COMMUNITY_VISUALIZATIONS = os.path.join(ASSETS, "infomap_community_visua
 os.makedirs(INFOMAP_COMMUNITY_VISUALIZATIONS, exist_ok=True)
 
 if __name__ == "__main__":
+    custom_cmap = generate_colormap()
+    
     synth_net_path = os.path.join(DATA_PATH, SYNTHETIC_NETWORKS)
 
     reference_pos = None
@@ -244,9 +343,18 @@ if __name__ == "__main__":
 
     files = sorted(os.listdir(synth_net_path))
     max_communities = 0
+    
+    num_communities = {}
+    modularity_values = {}
+    jaccard = {}
+    normalized_mutual_info_values = {}
+    normalized_variation_of_information = {}
+    
     for file in tqdm(files, desc="Processing synthetic networks", total=len(files)):
         filename = os.path.splitext(file)[0]
-        prr_value = extract_filename_info(filename).get('prr', None)    
+        file_info = extract_filename_info(filename)
+        prr_value = file_info.get('prr', None)
+        n_blocks = int(file_info.get('blocks', 5))
         G = nx.read_pajek(os.path.join(synth_net_path, file))
 
         # visualize_network(
@@ -266,13 +374,51 @@ if __name__ == "__main__":
         #     prr=prr_value,
         # )
 
-        communities_greedy = detect_communities(G, pos=reference_pos, filepath=file, prr=prr_value, algorithm_name='greedy')
-        communities_louvain = detect_communities(G, pos=reference_pos, filepath=file, prr=prr_value, algorithm_name='louvain')
-        communities_infomap = detect_communities(G, pos=reference_pos, filepath=file, prr=prr_value, algorithm_name='infomap')
+        communities_greedy = detect_communities(G, algorithm_name='greedy')
+        communities_louvain = detect_communities(G, algorithm_name='louvain')
+        communities_infomap = detect_communities(G, algorithm_name='infomap')
+
+        node_list = list(G.nodes())
+        true_partition = get_synthetic_ground_truth_partition(node_list, n_blocks=n_blocks)
+        labels_true = partition_to_labels(node_list, true_partition, partition_name="ground_truth")
+        labels_greedy = partition_to_labels(node_list, communities_greedy, partition_name="greedy")
+        labels_louvain = partition_to_labels(node_list, communities_louvain, partition_name="louvain")
+        labels_infomap = partition_to_labels(node_list, communities_infomap, partition_name="infomap")
+        
+        num_comms_greedy, mod_greedy = community_metrics(G, communities_greedy)
+        num_comms_louvain, mod_louvain = community_metrics(G, communities_louvain)
+        num_comms_infomap, mod_infomap = community_metrics(G, communities_infomap)
+        
+        num_communities[prr_value] = {
+            'greedy': num_comms_greedy,
+            'louvain': num_comms_louvain,
+            'infomap': num_comms_infomap
+        }
+        modularity_values[prr_value] = {
+            'greedy': mod_greedy,
+            'louvain': mod_louvain,
+            'infomap': mod_infomap
+        }
+
+        jaccard[prr_value] = {
+            'greedy': partition_jaccard_index(labels_true, labels_greedy),
+            'louvain': partition_jaccard_index(labels_true, labels_louvain),
+            'infomap': partition_jaccard_index(labels_true, labels_infomap),
+        }
+        normalized_mutual_info_values[prr_value] = {
+            'greedy': partition_normalized_mutual_information(true_partition, communities_greedy),
+            'louvain': partition_normalized_mutual_information(true_partition, communities_louvain),
+            'infomap': partition_normalized_mutual_information(true_partition, communities_infomap),
+        }
+        normalized_variation_of_information[prr_value] = {
+            'greedy': partition_normalized_variation_of_information(true_partition, communities_greedy, len(node_list)),
+            'louvain': partition_normalized_variation_of_information(true_partition, communities_louvain, len(node_list)),
+            'infomap': partition_normalized_variation_of_information(true_partition, communities_infomap, len(node_list)),
+        }
         
         # Align community indices across algorithms for better visual comparison
-        communities_louvain = reorder_communities(communities_greedy, communities_louvain)
-        communities_infomap = reorder_communities(communities_greedy, communities_infomap)
+        # communities_louvain = reorder_communities(communities_greedy, communities_louvain)
+        # communities_infomap = reorder_communities(communities_greedy, communities_infomap)
         
         # visualize_network(
         #     G, pos=reference_pos,
@@ -299,7 +445,9 @@ if __name__ == "__main__":
         #     prr=prr_value,
         #     communities=communities_infomap
         # )
-        
-        
-            
-        
+    
+    plot_metrics_evolution(num_communities, show_fig=False, savefig=True, out_path=ASSETS, metric_name="Number of communities")
+    plot_metrics_evolution(modularity_values, show_fig=False, savefig=True, out_path=ASSETS, metric_name="Modularity")
+    plot_metrics_evolution(jaccard, show_fig=False, savefig=True, out_path=ASSETS, metric_name="Jaccard index")
+    plot_metrics_evolution(normalized_mutual_info_values, show_fig=False, savefig=True, out_path=ASSETS, metric_name="Normalized mutual information")
+    plot_metrics_evolution(normalized_variation_of_information, show_fig=False, savefig=True, out_path=ASSETS, metric_name="Normalized variation of information")

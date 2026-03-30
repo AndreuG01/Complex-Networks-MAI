@@ -219,4 +219,5 @@ __marimo__/
 # Other files to ignore
 
 Lab\ *
+Spotify
 .DS_Store
