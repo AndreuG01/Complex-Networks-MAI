@@ -1,0 +1,140 @@
+\documentclass{article}
+\usepackage[a4paper,hmargin=2cm,top=2.25cm,bottom=3cm]{geometry}
+\usepackage{graphicx} % Required for inserting images
+
+\usepackage{url}
+\bibliographystyle{apalike}
+\usepackage{hyperref}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{fancyvrb}
+\usepackage{minted}
+\usepackage{amsmath}
+\usepackage{cleveref}
+\usepackage{subcaption}
+\usepackage{dirtytalk}
+\usepackage{parskip}
+\usepackage{colortbl} 
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{makecell}
+
+\usepackage{cleveref}
+\usepackage{verbatim}
+\usepackage{appendix}
+\usepackage{listings}
+\usepackage{amsfonts,amsthm}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes,arrows}
+\lstset{breaklines=true, basicstyle=\ttfamily}
+
+\setlength\parskip{2ex plus 0.2ex minus 0.4ex}
+\setlength\parindent{0em}
+
+\DeclareCaptionSubType[alph]{listing}
+
+
+
+% \title{PAR Exercise 1. Mining Robot Task.}
+% \author{Andreu Garcies Ramon\\Maria Guasch Torres}
+% \date{October 2025}
+
+\title{
+    \textbf{A2: Community Detection}\\
+    \large Complex Networks\\
+    \small Universitat Rovira i Virgili (URV)\\
+    \small Master in Artificial Intelligence (MAI)
+}
+\author{
+    Andreu Garcies Ramon\\
+    \texttt{andreu.garcies@estudiantat.upc.edu}
+    \and
+    Maria Guasch Torres\\
+    \texttt{maria.guasch.t@estudiantat.upc.edu}
+}
+\date{April 2026}
+
+% \bibliographystyle{apa}
+
+\begin{document}
+
+
+\maketitle
+
+\section{Introduction}
+
+The aim of this report is to present the analysis of the results obtained for the second assignment of the subject. In particular, we study how community detection algorithms work in order to characterize the mesoscale of complex networks.
+
+\section{Task 1: Characterization of the community structure of networks with block structure}\label{sec:part1}
+
+In this first task we use community detection algorithms to analyze networks generated according to the stochastic block model (SBM). The parameters used to generate these networks are the following:
+
+\begin{itemize}
+    \item Number of nodes \texttt{N=300}.
+    \item Number of different blocks of nodes \texttt{nblocks=5}.
+    \item  Probability that a node, belonging to a given block, establishes a link with another node from a different block \texttt{prs=0.02}.
+    \item Probability that a single node (belonging to a given block) establishes a link with another node from the same block \texttt{prr}. In this case, this indicator varies from network to network, ranging from 0 (no connections within the block) to 1 (nodes are fully connected within the block). This is what will allow us to study how these community detection algorithms work as the blocks become more and more connected within themselves.
+\end{itemize}
+
+\subsection{Community detection algorithms}
+
+We use three different community detection algorithms to characterize the community structure of the networks: Infomap, the Agglomerative Greedy algorithm, and the Louvain method. In this section we briefly outline the theoretical foundations of each approach.
+
+\subsubsection{Infomap}
+
+The Infomap algorithm \cite{rosvall2009map} is an information-theoretic method for community detection. Unlike modularity maximization approaches, which rely on the structural wiring of the network, Infomap identifies communities based on network dynamics and information flow.
+
+To model this flow, the algorithm uses a random walker navigating through the network's links. The main idea is that if a network has a well defined community structure, the random walker will spend extended periods of time trapped within certain clusters of nodes before going to other regions of the network. 
+
+By finding the most compact way to describe the random walker's path, Infomap uses data compression to show the underlying flow of information in the network. To do so, the algorithm uses a two-level coding scheme:
+
+\begin{enumerate}
+    \item \textbf{Module Codes:} Nodes are partitioned into modules (communities). A unique index code is assigned to each module to track when the random walker transitions from one community to another.
+    \item \textbf{Node Codes:} Within each module, nodes are assigned local codes. Because these local codes can be reused across different modules, the overall description of the random walker's path requires significantly less information.
+\end{enumerate}
+
+The core of the algorithm is the Map Equation, which calculates the theoretical minimum description length (in bits) required to track the path of the random walker for any given network partition. Infomap evaluates different node partitions and searches for the one that minimizes the Map Equation. The partition that gets the shortest description length represents the optimal community structure, as it best captures the regions where flow persists the longest.
+
+For the implementation of this algorithm, we use the \href{https://mapequation.github.io/infomap/python/}{Infomap Python API}. It provides an implementation of the map equation framework.
+
+\subsubsection{Agglomerative Greedy Algorithm}
+
+
+
+\subsubsection{Louvain}
+
+The Louvain method \cite{blondel2008fast} is a popular, heuristic algorithm designed to extract the community structure of large networks by maximizing a metric known as Modularity ($Q$). Modularity measures the density of links inside communities compared to the expected density of links between them in a random network. A higher modularity score indicates a more defined community structure.
+
+Unlike flow-based algorithms like Infomap, Louvain focuses entirely on the structural topology of the network. The algorithm operates in a greedy, iterative manner in two recurring phases:
+
+\begin{enumerate}
+    \item \textbf{Local optimization:} Initially, every node is assigned to its own community. The algorithm then evaluates each node and calculates the change in modularity if that node was moved into the community of one of its neighbors. The node is then placed into the community that gives the highest increase in modularity. This process is applied sequentially for all nodes, until no movements can improve the modularity.
+    \item \textbf{Network aggregation:} Once the local optimization is done, the algorithm builds a new, macroscopic network. In this new network, the communities found in the first phase become the new \say{nodes} and the links between them are formed by adding the weights of the edges between the original nodes in those respective communities.
+\end{enumerate}
+
+These two phases are repeated iteratively until the network cannot be condensed anymore and the modularity reaches its maximum value. This process makes the algorithm very computationally efficient and also provides a hierarchical community structure.
+
+We use the \texttt{louvain_communities} function provided by the \href{https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.community.louvain.louvain_communities.html}{NetworkX library in Python}.
+
+\section{Task 2: Characterization of the community structure of real networks}
+
+
+
+\section{Conclusions}
+
+In this report, we have shown how the structural descriptors provide powerful tools for understanding the organization of complex networks. By combining macroscopic and microscopic analyses, we have been able to distinguish between homogeneous and heterogeneous topologies, identify the presence of hubs, and evaluate the small-world properties. We have associated each network with its corresponding generative model, and the simulations generated suggest that these models have been correctly matched to their respective networks.
+
+For the fifth network, a different approach has been followed, leading to the exploration of a model not covered in the theoretical lectures. In particular, a spatial model based on node positions has been proposed as a possible mechanism to generate the network.
+
+\newpage
+\bibliography{references}
+
+\clearpage
+
+% \appendix
+
+% \section{Rule definition prompt}\label{sec:prompt}
+% This section includes the prompt used to generate the initial set of rules for our fuzzy expert system using DeepSeek.
+% \lstinputlisting{prompt.txt}
+
+\end{document}
