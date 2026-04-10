@@ -6,6 +6,18 @@ Blondel, V.~D., Guillaume, J.-L., Lambiotte, R., and Lefebvre, E. (2008).
 \newblock {\em Journal of statistical mechanics: theory and experiment},
   2008(10):P10008.
 
+\bibitem[Clauset et~al., 2004]{clauset2004finding}
+Clauset, A., Newman, M.~E., and Moore, C. (2004).
+\newblock Finding community structure in very large networks.
+\newblock {\em Physical Review E—Statistical, Nonlinear, and Soft Matter
+  Physics}, 70(6):066111.
+
+\bibitem[Newman, 2004]{newman2004fast}
+Newman, M.~E. (2004).
+\newblock Fast algorithm for detecting community structure in networks.
+\newblock {\em Physical Review E—Statistical, Nonlinear, and Soft Matter
+  Physics}, 69(6):066133.
+
 \bibitem[Rosvall et~al., 2009]{rosvall2009map}
 Rosvall, M., Axelsson, D., and Bergstrom, C.~T. (2009).
 \newblock The map equation.

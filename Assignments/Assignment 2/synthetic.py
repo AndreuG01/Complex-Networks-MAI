@@ -304,6 +304,27 @@ if __name__ == "__main__":
         n_blocks = int(file_info.get('blocks', 5))
         G = nx.read_pajek(os.path.join(synth_net_path, file))
 
+        # comparison of layouts for prr = 0.02
+        # if prr_value == 0.02:
+        #     visualize_network(
+        #         G, pos=reference_pos,
+        #         out_path=INITIAL_NETWORK_VISUALIZATIONS,
+        #         savefig=True,
+        #         show_fig=False,
+        #         prr=f"{prr_value}_anchored"
+        #     )
+            
+        #     independent_pos = nx.spring_layout(G, seed=42)
+        #     visualize_network(
+        #         G, pos=independent_pos,
+        #         out_path=INITIAL_NETWORK_VISUALIZATIONS,
+        #         savefig=True,
+        #         show_fig=False,
+        #         prr=f"{prr_value}_independent"
+        #     )
+
+        
+
         # visualize_network(
         #     G, pos=reference_pos,
         #     out_path=INITIAL_NETWORK_VISUALIZATIONS,

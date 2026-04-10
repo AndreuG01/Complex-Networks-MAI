@@ -76,13 +76,72 @@ In this first task we use community detection algorithms to analyze networks gen
     \item Probability that a single node (belonging to a given block) establishes a link with another node from the same block \texttt{prr}. In this case, this indicator varies from network to network, ranging from 0 (no connections within the block) to 1 (nodes are fully connected within the block). This is what will allow us to study how these community detection algorithms work as the blocks become more and more connected within themselves.
 \end{itemize}
 
+\begin{figure}[htbp]
+    \centering
+    
+    % Left Image: prr = 0.02
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_0.02.png} % Update file name/extension
+        % \caption{$p_{rr} = 0.02$}
+        \label{fig:prr_002}
+    \end{subfigure}
+    \hfill
+    % Center Image: prr = 0.16
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_0.16.png} % Update file name/extension
+        % \caption{$p_{rr} = 0.16$}
+        \label{fig:prr_016}
+    \end{subfigure}
+    \hfill
+    % Right Image: prr = 1.00
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_1.0.png} % Update file name/extension
+        % \caption{$p_{rr} = 1.00$}
+        \label{fig:prr_100}
+    \end{subfigure}
+    
+    \caption{Evolution of the network's connections as the probability of intra-block links ($p_{rr}$) increases.}
+    \label{fig:network_evolution}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    
+    % Left Image: Independent Layout
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_0.02_independent.png}
+        \caption{Independenty applied layout algorithm}
+        \label{fig:layout_independent}
+    \end{subfigure}
+    \hfill
+    % Right Image: Anchored Layout
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_0.02_anchored.png}
+        \caption{Anchored layout (using $p_{rr} = 1.00$)}
+        \label{fig:layout_anchored}
+    \end{subfigure}
+    
+    \caption{Comparison of visualization strategies for the sparse $p_{rr} = 0.02$ network.}
+    \label{fig:layout_comparison}
+\end{figure}
+
+Figure~\ref{fig:network_evolution} shows the evolution of the connections in the network as the probability of intra-block links ($p_{rr}$) increases. At the lowest value ($p_{rr} = 0.02$), the actual connections within each group are highly sparse. While the communities are easily distinguished in the visualization, this clustering is actually an artifact of our methodology: as requested by the project statement and to facilitate comparison between networks of different $p_{rr}$, the spatial coordinates of the nodes were anchored using a layout algorithm applied to the $p_{rr} = 1.00$ network. If we had applied it directly to the $p_{rr} = 0.02$ network, its sparse topology would make these groups nearly impossible to identify visually (as it is shown in Figure~\ref{fig:layout_comparison}). 
+
+As the probability increases to $p_{rr} = 0.16$, the internal edges within each block become much more dense. Finally, at $p_{rr} = 1.00$, the nodes within each block form fully-connected clusters. Although we have not yet applied the community detection algorithms to the networks at this stage, this visualization clearly shows the evolution of the block structure.
+
+
 \subsection{Community detection algorithms}
 
-We use three different community detection algorithms to characterize the community structure of the networks: Infomap, the Agglomerative Greedy algorithm, and the Louvain method. In this section we briefly outline the theoretical foundations of each approach.
+We use three different community detection algorithms to characterize the community structure of the networks: Infomap, the Louvain method and the Agglomerative Greedy algorithm. In this section we briefly outline the theoretical foundations of each approach.
 
 \subsubsection{Infomap}
 
-The Infomap algorithm \cite{rosvall2009map} is an information-theoretic method for community detection. Unlike modularity maximization approaches, which rely on the structural wiring of the network, Infomap identifies communities based on network dynamics and information flow.
+The Infomap algorithm \cite{rosvall2009map} is an information-theoretic method for community detection. Unlike modularity maximization approaches which use the structural connection of the network, Infomap identifies communities based on network dynamics and information flow.
 
 To model this flow, the algorithm uses a random walker navigating through the network's links. The main idea is that if a network has a well defined community structure, the random walker will spend extended periods of time trapped within certain clusters of nodes before going to other regions of the network. 
 
@@ -97,9 +156,6 @@ The core of the algorithm is the Map Equation, which calculates the theoretical 
 
 For the implementation of this algorithm, we use the \href{https://mapequation.github.io/infomap/python/}{Infomap Python API}. It provides an implementation of the map equation framework.
 
-\subsubsection{Agglomerative Greedy Algorithm}
-
-
 
 \subsubsection{Louvain}
 
@@ -108,13 +164,149 @@ The Louvain method \cite{blondel2008fast} is a popular, heuristic algorithm desi
 Unlike flow-based algorithms like Infomap, Louvain focuses entirely on the structural topology of the network. The algorithm operates in a greedy, iterative manner in two recurring phases:
 
 \begin{enumerate}
-    \item \textbf{Local optimization:} Initially, every node is assigned to its own community. The algorithm then evaluates each node and calculates the change in modularity if that node was moved into the community of one of its neighbors. The node is then placed into the community that gives the highest increase in modularity. This process is applied sequentially for all nodes, until no movements can improve the modularity.
+    \item \textbf{Local optimization:} Initially, every node is assigned to its own community. The algorithm then evaluates each node and calculates the change in modularity if that node was moved into neighboring community. The node is then placed into the community that gives the highest increase in modularity. This process is performed sequentially for all nodes, until no more movements can improve the modularity.
     \item \textbf{Network aggregation:} Once the local optimization is done, the algorithm builds a new, macroscopic network. In this new network, the communities found in the first phase become the new \say{nodes} and the links between them are formed by adding the weights of the edges between the original nodes in those respective communities.
 \end{enumerate}
 
 These two phases are repeated iteratively until the network cannot be condensed anymore and the modularity reaches its maximum value. This process makes the algorithm very computationally efficient and also provides a hierarchical community structure.
 
-We use the \texttt{louvain_communities} function provided by the \href{https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.community.louvain.louvain_communities.html}{NetworkX library in Python}.
+We use the \texttt{louvain\_communities} function provided by the \href{https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.community.louvain.louvain_communities.html}{NetworkX library in Python}.
+
+
+\subsubsection{Agglomerative Greedy algorithm}
+
+The Agglomerative Greedy algorithm \cite{newman2004fast, clauset2004finding} is another approach based on modularity maximization. However, unlike the Louvain method which relies on moving individual nodes to optimize modularity locally, this algorithm uses a bottom-up hierarchical clustering strategy. 
+
+The algorithm begins with an initial state where every node in the network is assigned to its own community. From this point, it goes through an iterative agglomerative process. At each step, the algorithm evaluates all pairs of connected communities and merges the pair that results in the largest possible increase (or smallest decrease) in the overall modularity ($Q$) of the network. This merging process is repeated continuously, building larger and larger communities until all nodes in the network belong to a single community. The optimal community structure is then determined by selecting the specific partition from the merging history that corresponds to the maximum modularity value.
+
+For the implementation of this algorithm, we use the \texttt{greedy\_modularity\_communities} function from the \href{https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.community.modularity_max.greedy_modularity_communities.html}{Python NetworkX library}.
+
+
+\subsection{Analysis of the community detection results}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/number_of_communities.png} 
+    \caption{Evolution of number of detected communities as a function of $p_{rr}$}
+    \label{fig:num_communities}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/modularity.png} 
+    \caption{Evolution of modularity as a function of $p_{rr}$}
+    \label{fig:modularity}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/jaccard_index.png} 
+    \caption{Jaccard index between the detected partitions and the ground truth as a function of $p_{rr}$.}
+    \label{fig:jaccard}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/normalized_mutual_information.png} 
+    \caption{Normalized mutual information between the detected partitions and the ground truth as a function of $p_{rr}$.}
+    \label{fig:norm_mutual_info}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/normalized_variation_of_information.png} 
+    \caption{Normalized variation of information between the detected partitions and the ground truth as a function of $p_{rr}$.}
+    \label{fig:norm_var_information}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_0.02_infomap.png} 
+        % \caption{$p_{rr} = 0.02$}
+        \label{fig:prr_002_infomap}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_0.16_infomap.png}
+        % \caption{$p_{rr} = 0.16$}
+        \label{fig:prr_016_infomap}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_1.0_infomap.png}
+        % \caption{$p_{rr} = 1.00$}
+        \label{fig:prr_100_infomap}
+    \end{subfigure}
+    
+    \caption{Color-coded visualization of the detected communities by the Infomap algorithm}
+    \label{fig:community_detection_infomap}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_0.02_louvain.png} 
+        % \caption{$p_{rr} = 0.02$}
+        \label{fig:prr_002_louvain}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_0.16_louvain.png}
+        % \caption{$p_{rr} = 0.16$}
+        \label{fig:prr_016_louvain}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_1.0_louvain.png}
+        % \caption{$p_{rr} = 1.00$}
+        \label{fig:prr_100_louvain}
+    \end{subfigure}
+    
+    \caption{Color-coded visualization of the detected communities by the Infomap algorithm}
+    \label{fig:community_detection_louvain}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_0.02_greedy.png} 
+        % \caption{$p_{rr} = 0.02$}
+        \label{fig:prr_002_greedy}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_0.16_greedy.png}
+        % \caption{$p_{rr} = 0.16$}
+        \label{fig:prr_016_greedy}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/prr_1.0_greedy.png}
+        % \caption{$p_{rr} = 1.00$}
+        \label{fig:prr_100_greedy}
+    \end{subfigure}
+    
+    \caption{Color-coded visualization of the detected communities by the Infomap algorithm}
+    \label{fig:community_detection_greedy}
+\end{figure}
+
+
+
+
+
+
+
 
 \section{Task 2: Characterization of the community structure of real networks}
 
