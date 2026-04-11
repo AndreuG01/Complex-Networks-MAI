@@ -184,12 +184,7 @@ For the implementation of this algorithm, we use the \texttt{greedy\_modularity\
 
 \subsection{Analysis of the community detection results}
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.6\textwidth]{assets/number_of_communities.png} 
-    \caption{Evolution of number of detected communities as a function of $p_{rr}$}
-    \label{fig:num_communities}
-\end{figure}
+Figure~\ref{fig:modularity} shows the evolution of the modularity ($Q$) in the network as the intra-block connection probability ($p_{rr}$) increases. Both the Louvain and Agglomerative Greedy algorithms exhibit a similar plot: starting from a modularity value of around $Q = 0.45$, they then experience a slight decrease to approximately $Q = 0.3$ around $p_{rr} = 0.1$, and subsequently increasing as the network density increases as well. This alignment is expected, as both are modularity maximization algorithms and they belong to the same \say{family} of algorithms.
 
 \begin{figure}[htbp]
     \centering
@@ -198,13 +193,19 @@ For the implementation of this algorithm, we use the \texttt{greedy\_modularity\
     \label{fig:modularity}
 \end{figure}
 
-Figure~\ref{fig:modularity} shows the evolution of the modularity ($Q$) in the network as the intra-block connection probability ($p_{rr}$) increases. Both the Louvain and Agglomerative Greedy algorithms exhibit a similar plot: starting from a modularity value of around $Q = 0.45$, they then experience a slight decrease to approximately $Q = 0.3$ around $p_{rr} = 0.1$, and subsequently increasing as the network density increases as well. This alignment is expected, as both are modularity maximization algorithms and they belong to the same \say{family} of algorithms.
 
 However, Infomap presents a slightly different evolution of modularity. Its modularity experiences a sharp drop to exactly $Q = 0.0$ between $p_{rr} = 0.05$ and $p_{rr} = 0.1$. This behavior directly correlates with the results displayed in Figure~\ref{fig:num_communities}, which show that Infomap detects exactly 1 community in this specific interval. By definition, a network partitioned into a single community that contains all nodes results in a modularity of zero.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/number_of_communities.png} 
+    \caption{Evolution of number of detected communities as a function of $p_{rr}$}
+    \label{fig:num_communities}
+\end{figure}
+
 From $p_{rr} \approx 0.15$ onwards, the three algorithms converge in both metrics. They identify the ground-truth value of 5 communities and follow an identical increasing modularity curve, reaching $Q \approx 0.7$ at $p_{rr} = 1.0$. This confirms that once the internal block structure becomes sufficiently dense, all three methods are able to correctly identify the community structure of the network.
 
-Modularity alone is an not a reliable indicator of true community structure due to the phenomenon of \say{spurious communities}. Our results clearly demonstrate this: when $p_{rr}$ approaches 0.0, the network behaves as an Erdős-Rényi random graph with no actual communities. Yet, modularity maximization algorithms like Louvain and Greedy still report relatively high scores (approximately $Q = 0.45$). They achieve this by exploiting normal statistical fluctuations in the random distribution of edges, artificially grouping them to maximize the modularity function. Therefore, a score like $Q = 0.4$ does not guarantee a meaningful community structure—a purely random network can produce that exact same value entirely by chance.
+Modularity alone is an not a reliable indicator of true community structure due to the phenomenon of \say{spurious communities}. Our results clearly demonstrate this: when $p_{rr}$ approaches 0.0, the network behaves as an Erdös-Rényi random graph with no actual communities. Yet, modularity maximization algorithms like Louvain and Greedy still report relatively high scores (approximately $Q = 0.45$). They achieve this by exploiting normal statistical fluctuations in the random distribution of edges, artificially grouping them to maximize the modularity function. Therefore, a score like $Q = 0.4$ does not guarantee a meaningful community structure, as a purely random network can produce that exact same value entirely by chance.
 
 \begin{figure}[htbp]
     \centering
@@ -231,7 +232,7 @@ Modularity alone is an not a reliable indicator of true community structure due 
 We then compare the partitions found by the algorithms against the ground-truth partition. To do so, we use three standard measures for this purpose: Jaccard Index, Normalized Mutual Information and Normalized Variation of Information.
 
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     
     \begin{subfigure}[b]{0.32\textwidth}
@@ -258,7 +259,7 @@ We then compare the partitions found by the algorithms against the ground-truth 
 \end{figure}
 
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     
     \begin{subfigure}[b]{0.32\textwidth}
@@ -285,7 +286,7 @@ We then compare the partitions found by the algorithms against the ground-truth 
 \end{figure}
 
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     
     \begin{subfigure}[b]{0.32\textwidth}
@@ -313,14 +314,77 @@ We then compare the partitions found by the algorithms against the ground-truth 
 
 
 \section{Task 2: Characterization of the community structure of real networks}
+ 
+In this task, we apply the Louvain community detection algorithm to a real-world contact network collected in a French primary school \cite{stehle2011high}. The dataset captures face-to-face interactions between students and teachers over two school days, where edge weights reflect the cumulative contact time between pairs of individuals. The network comprises 242 nodes (232 students and 10 teachers) belonging to 11 school groups (classes 1A through 5B and a Teachers group) and 8317 weighted edges. We analyze both an unweighted version (where all edges have unit weight) and the original weighted version of the network.
+ 
+Figure~\ref{fig:primary_school_communities} presents a color-coded visualization of the network under three different labelings: the original school groups (left), the communities detected on the unweighted network (center), and the communities detected on the weighted network (right). In all three cases, node positions are fixed using the layout computed on the weighted network, so that structural differences between the two detected partitions can be directly compared. The layout has been generated using the Kamada-Kawai algorithm with the inverse of the contact duration as edge weights.
+ 
+\begin{figure}[htbp]
+    \centering
+    
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/primary_school_network_original_communities.png} 
+        \label{fig:primary_school_network_original_communities}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/unweighted_network_communities.png}
+        \label{fig:unweighted_network_communities}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/weighted_network_communities.png}
+        \label{fig:weighted_network_communities}
+    \end{subfigure}
+    
+    \caption{Color-coded visualization of the detected communities in the primary school network. Left: original communities (school groups). Center: communities detected by Louvain on the unweighted version of the network. Right: communities detected by Louvain on the weighted version of the network. Node positions are fixed by the layout of the weighted network in all three cases.}
+    \label{fig:primary_school_communities}
+\end{figure}
+ 
+\subsection{Detected communities and their composition}
+ 
+Both the unweighted and the weighted versions of the network generate 6 communities under the Louvain algorithm. Despite this identical match in the number of communities, the actual composition of those communities differs between the two cases (especially in the higher grades), and understanding the nature of those differences requires reflecting on what the algorithm can and cannot be expected to recover.
+ 
+A key observation is that the algorithm detects the communities at the grade level rather than at the class level. In all detected communities, the two groups of the same school year (e.g.\ 2A and 2B, or 4A and 4B) are merged into a single community. This is does not necessarily mean that the algorithm fails, but it can be interpreted as a consequence of the social structure of the school itself. It seems that students from the two different groups within the same grade share break times and more common spaces, and thus accumulate a higher number of interactions. The algorithm, optimizing for modularity, correctly identifies that the boundary between groups from the same grade is weaker than the boundary between different grade levels. The notable exception is the first grade (1A and 1B), which appear as two separate communities in both the weighted and unweighted cases. This is consistent with the visual inspection of the original network (Figure~\ref{fig:primary_school_communities}, left), where the red and green groups are more spatially separated, suggesting that 1st-graders interact much more exclusively within their own class than older children do. Indeed, based on our experience at school, even without having performed a scientific study, students tend to interact more with other classes as they get older. This is also reflected in the network, where the separation between grades and classes becomes blurrier in higher courses, except for the strong distinction between 1st, 2nd, 3rd and 4th, 5th grades, which is likely explained by their different lunch times~\cite{stehle2011high}.
+ 
+A further structural observation concerns the teachers. The metadata assigns each class teacher to the generic ``Teachers'' group, but the detected communities consistently distribute teachers across the student communities rather than grouping them together. This comes as no big surprise, as each teacher spends the majority of their time with the students of their own class. Their strongest ties are therefore within their assigned class community, so the algorithm correctly assigns each teacher to their respective class. Because the Louvain method assigns nodes based on the pattern of their connections rather than on any predefined label, it produces a more sociologically meaningful result than the original metadata grouping in this case.
+ 
+Figures~\ref{fig:community_composition_unweighted} and~\ref{fig:community_composition_weighted} show the full composition of the detected communities in terms of the original school groups.
+ 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{assets/community_composition_unweighted.png}
+    \caption{Composition of the communities detected by Louvain on the unweighted version of the primary school network. Each bar represents a community, and the colors indicate the original school group to which each node belongs.}
+    \label{fig:community_composition_unweighted}
+\end{figure}
 
+In the unweighted case (Figure~\ref{fig:community_composition_unweighted}), communities 0 and 1 recover the first-grade classes 1A and 1B as separate groups ($\sim$23--26 nodes each). This corresponds to the only grade-level split observed. Communities 3 and 4 are each dominated by a single grade: class 2B and class 3A, respectively (as indicated by their colors), with each community also containing the complementary group of that grade (2A into community 3, and 3B into community 4) along with the corresponding teachers. Community 7 is composed almost entirely of class 4B ($\sim$24 nodes). In sharp contrast, community 9 is very large ($\sim$70 nodes) and highly heterogeneous, aggregating classes 4A, 5A, 5B and the Teachers together. The fact that 4th and 5th grade (and the remaining teachers) are all into a single large community points to a specific weakness of the unweighted approach. In the original network, the spatial boundary between grades 4 and 5 is already less visually clear than those separating lower grades, and without contact durations separating these groups apart is not possible.
+
+ 
+In the weighted case (Figure~\ref{fig:community_composition_weighted}), communities 0, 1, 3 and 4 are essentially identical to their respective communities in the unweighted case, recovering the same grade-level groupings for years 1 through 3. The main difference lies in the upper grades. The large heterogeneous community 9 from the unweighted analysis is now split into community 6 ($\sim$44 nodes, dominated by classes 4A and 4B) and community 9 ($\sim$50 nodes, dominated by classes 5A, 5B and Teachers). By incorporating contact durations, the algorithm has more information to identify that the 4th-grade students (despite having many connections to 5th-graders) interact more intensively within their own grade, making the inter-grade boundary distinguishable.
+ 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{assets/community_composition_weighted.png}
+    \caption{Composition of the communities detected by Louvain on the weighted version of the primary school network. Each bar represents a community, and the colors indicate the original school group to which each node belongs.}
+    \label{fig:community_composition_weighted}
+\end{figure}
+ 
+\subsection{Why do weights matter?}
+ 
+The comparison above reveals two complementary aspects of what edge weights contribute to community detection in social interaction networks.
+ 
+The first is a matter of resolution. In the unweighted graph, every recorded contact, despite it being brief, counts equally. A spontaneous encounter in a corridor between a student from 4th grade and another from 5th grade contributes as much to the community structure as hours of in-class interaction. As a result, the accumulated cross-grade links between the upper school years are comparable to within-grade links, and the modularity gain of splitting them is negligible. The weighted version corrects for this, since within-grade contacts accumulate far more total duration than cross-grade ones. Therefore, the algorithm can detect the grade boundary where the unweighted version is not able to.
+ 
+The second aspect concerns granularity. The fact that the algorithm merges the two sections of each grade into a single community is a property of the data, not an artifact of ignoring weights. This is directly supported by the contact matrices reported by Stehlé et al.\ \cite{stehle2011high}, who observe that \textit{``each class has more contacts with the other class of the same grade than with any other class''}, and that the contact matrices reveal \textit{``two-by-two light blocks around the diagonal''} reflecting high contact numbers and durations between classes from the same grade. Weights do not change this conclusion because the ratio of within-group to between-group contact time is not large enough to cross the modularity threshold needed for a further split. We therefore believe that the algorithm operating correctly as it finds the partition that best reflects the actual intensity of social interactions in the data.
 
 
 \section{Conclusions}
 
-In this report, we have shown how the structural descriptors provide powerful tools for understanding the organization of complex networks. By combining macroscopic and microscopic analyses, we have been able to distinguish between homogeneous and heterogeneous topologies, identify the presence of hubs, and evaluate the small-world properties. We have associated each network with its corresponding generative model, and the simulations generated suggest that these models have been correctly matched to their respective networks.
+% In this report, we have shown how the structural descriptors provide powerful tools for understanding the organization of complex networks. By combining macroscopic and microscopic analyses, we have been able to distinguish between homogeneous and heterogeneous topologies, identify the presence of hubs, and evaluate the small-world properties. We have associated each network with its corresponding generative model, and the simulations generated suggest that these models have been correctly matched to their respective networks.
 
-For the fifth network, a different approach has been followed, leading to the exploration of a model not covered in the theoretical lectures. In particular, a spatial model based on node positions has been proposed as a possible mechanism to generate the network.
+% For the fifth network, a different approach has been followed, leading to the exploration of a model not covered in the theoretical lectures. In particular, a spatial model based on node positions has been proposed as a possible mechanism to generate the network.
 
 \newpage
 \bibliography{references}
