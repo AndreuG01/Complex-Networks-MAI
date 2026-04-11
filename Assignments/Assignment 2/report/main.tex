@@ -130,9 +130,9 @@ In this first task we use community detection algorithms to analyze networks gen
     \label{fig:layout_comparison}
 \end{figure}
 
-Figure~\ref{fig:network_evolution} shows the evolution of the connections in the network as the probability of intra-block links ($p_{rr}$) increases. At the lowest value ($p_{rr} = 0.02$), the actual connections within each group are highly sparse. While the communities are easily distinguished in the visualization, this clustering is actually an artifact of our methodology: as requested by the project statement and to facilitate comparison between networks of different $p_{rr}$, the spatial coordinates of the nodes were anchored using a layout algorithm applied to the $p_{rr} = 1.00$ network. If we had applied it directly to the $p_{rr} = 0.02$ network, its sparse topology would make these groups nearly impossible to identify visually (as it is shown in Figure~\ref{fig:layout_comparison}). 
+Figure~\ref{fig:network_evolution} shows the evolution of the connections in the network as the probability of intra-block links ($p_{rr}$) increases. At the lowest value shown in the figure ($p_{rr} = 0.02$), the actual connections within each group are very sparse. While the communities are easily distinguished in the visualization, this clustering is actually an artifact of our methodology: as requested by the project statement and to facilitate comparison between networks of different $p_{rr}$, the spatial coordinates of the nodes were anchored using a layout algorithm applied to the $p_{rr} = 1.00$ network. If we had applied it directly to the $p_{rr} = 0.02$ network, its sparse topology would make these groups nearly impossible to identify visually (as it is shown in Figure~\ref{fig:layout_comparison}). 
 
-As the probability increases to $p_{rr} = 0.16$, the internal edges within each block become much more dense. Finally, at $p_{rr} = 1.00$, the nodes within each block form fully-connected clusters. Although we have not yet applied the community detection algorithms to the networks at this stage, this visualization clearly shows the evolution of the block structure.
+As the probability increases to $p_{rr} = 0.16$, the internal edges within each block become much more dense. Finally, at $p_{rr} = 1.00$, the nodes within each block form fully-connected clusters. Although we have not yet applied the community detection algorithms to the networks at this stage, this visualization clearly shows the block structure.
 
 
 \subsection{Community detection algorithms}
@@ -159,13 +159,13 @@ For the implementation of this algorithm, we use the \href{https://mapequation.g
 
 \subsubsection{Louvain}
 
-The Louvain method \cite{blondel2008fast} is a popular, heuristic algorithm designed to extract the community structure of large networks by maximizing a metric known as Modularity ($Q$). Modularity measures the density of links inside communities compared to the expected density of links between them in a random network. A higher modularity score indicates a more defined community structure.
+The Louvain method \cite{blondel2008fast} is a popular heuristic algorithm designed to extract the community structure of large networks by maximizing a metric known as Modularity ($Q$). Modularity measures the density of links inside communities compared to the expected density of links between them in a random network. A higher modularity score indicates a more defined community structure.
 
 Unlike flow-based algorithms like Infomap, Louvain focuses entirely on the structural topology of the network. The algorithm operates in a greedy, iterative manner in two recurring phases:
 
 \begin{enumerate}
-    \item \textbf{Local optimization:} Initially, every node is assigned to its own community. The algorithm then evaluates each node and calculates the change in modularity if that node was moved into neighboring community. The node is then placed into the community that gives the highest increase in modularity. This process is performed sequentially for all nodes, until no more movements can improve the modularity.
-    \item \textbf{Network aggregation:} Once the local optimization is done, the algorithm builds a new, macroscopic network. In this new network, the communities found in the first phase become the new \say{nodes} and the links between them are formed by adding the weights of the edges between the original nodes in those respective communities.
+    \item \textbf{Local optimization:} Initially, every node is assigned to its own community. The algorithm then evaluates each node and calculates the change in modularity if that node was moved into a neighboring community. The node is then placed into the community that gives the highest increase in modularity. This process is performed sequentially for all nodes, until no more node movements can improve the modularity.
+    \item \textbf{Network aggregation:} Once the local optimization is done, the algorithm builds a new macroscopic network. In this new network, the communities found in the first phase become the new \say{nodes} and the links between them are formed by adding the weights of the edges between the original nodes in those respective communities.
 \end{enumerate}
 
 These two phases are repeated iteratively until the network cannot be condensed anymore and the modularity reaches its maximum value. This process makes the algorithm very computationally efficient and also provides a hierarchical community structure.
@@ -198,6 +198,14 @@ For the implementation of this algorithm, we use the \texttt{greedy\_modularity\
     \label{fig:modularity}
 \end{figure}
 
+Figure~\ref{fig:modularity} shows the evolution of the modularity ($Q$) in the network as the intra-block connection probability ($p_{rr}$) increases. Both the Louvain and Agglomerative Greedy algorithms exhibit a similar plot: starting from a modularity value of around $Q = 0.45$, they then experience a slight decrease to approximately $Q = 0.3$ around $p_{rr} = 0.1$, and subsequently increasing as the network density increases as well. This alignment is expected, as both are modularity maximization algorithms and they belong to the same \say{family} of algorithms.
+
+However, Infomap presents a slightly different evolution of modularity. Its modularity experiences a sharp drop to exactly $Q = 0.0$ between $p_{rr} = 0.05$ and $p_{rr} = 0.1$. This behavior directly correlates with the results displayed in Figure~\ref{fig:num_communities}, which show that Infomap detects exactly 1 community in this specific interval. By definition, a network partitioned into a single community that contains all nodes results in a modularity of zero.
+
+From $p_{rr} \approx 0.15$ onwards, the three algorithms converge in both metrics. They identify the ground-truth value of 5 communities and follow an identical increasing modularity curve, reaching $Q \approx 0.7$ at $p_{rr} = 1.0$. This confirms that once the internal block structure becomes sufficiently dense, all three methods are able to correctly identify the community structure of the network.
+
+Modularity alone is an not a reliable indicator of true community structure due to the phenomenon of \say{spurious communities}. Our results clearly demonstrate this: when $p_{rr}$ approaches 0.0, the network behaves as an Erdős-Rényi random graph with no actual communities. Yet, modularity maximization algorithms like Louvain and Greedy still report relatively high scores (approximately $Q = 0.45$). They achieve this by exploiting normal statistical fluctuations in the random distribution of edges, artificially grouping them to maximize the modularity function. Therefore, a score like $Q = 0.4$ does not guarantee a meaningful community structure—a purely random network can produce that exact same value entirely by chance.
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.6\textwidth]{assets/jaccard_index.png} 
@@ -219,6 +227,8 @@ For the implementation of this algorithm, we use the \texttt{greedy\_modularity\
     \caption{Normalized variation of information between the detected partitions and the ground truth as a function of $p_{rr}$.}
     \label{fig:norm_var_information}
 \end{figure}
+
+We then compare the partitions found by the algorithms against the ground-truth partition. To do so, we use three standard measures for this purpose: Jaccard Index, Normalized Mutual Information and Normalized Variation of Information.
 
 
 \begin{figure}[htbp]
@@ -270,7 +280,7 @@ For the implementation of this algorithm, we use the \texttt{greedy\_modularity\
         \label{fig:prr_100_louvain}
     \end{subfigure}
     
-    \caption{Color-coded visualization of the detected communities by the Infomap algorithm}
+    \caption{Color-coded visualization of the detected communities by the Louvain algorithm}
     \label{fig:community_detection_louvain}
 \end{figure}
 
@@ -297,15 +307,9 @@ For the implementation of this algorithm, we use the \texttt{greedy\_modularity\
         \label{fig:prr_100_greedy}
     \end{subfigure}
     
-    \caption{Color-coded visualization of the detected communities by the Infomap algorithm}
+    \caption{Color-coded visualization of the detected communities by the Agglomerative Greedy algorithm}
     \label{fig:community_detection_greedy}
 \end{figure}
-
-
-
-
-
-
 
 
 \section{Task 2: Characterization of the community structure of real networks}

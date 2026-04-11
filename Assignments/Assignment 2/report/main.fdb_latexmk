@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex main"] 1775819230.46757 "main.aux" "main.bbl" "main" 1775819245.54467 0
+["bibtex main"] 1775843552.98375 "main.aux" "main.bbl" "main" 1775843574.49271 0
   "./references.bib" 1775809212 1204 05fb46635500f4b71889076a023c633d ""
   "C:/Users/guasc/AppData/Local/Programs/MiKTeX/bibtex/bst/bibtex/apalike.bst" 1291972791 24635 604dafcc79f521a11ea73e506e1fbd98 ""
-  "main.aux" 1775819244 12158 ae0d68c912c56540ab3996ec5eb53817 "pdflatex"
+  "main.aux" 1775843573 12203 17b9cf5b499ec618595287b27232107f "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1775819230.90062 "c:/Users/guasc/Documentos/MASTERS UPC/Q2/CN/Complex-Networks-MAI/Assignments/Assignment 2/report/main.tex" "main.pdf" "main" 1775819245.54535 0
+["pdflatex"] 1775843553.46257 "c:/Users/guasc/Documentos/MASTERS UPC/Q2/CN/Complex-Networks-MAI/Assignments/Assignment 2/report/main.tex" "main.pdf" "main" 1775843574.4934 0
   "C:/Users/guasc/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1775809813 279613 fe62a258ff6d99cc2243c3a2d16aa767 ""
   "C:/Users/guasc/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1764002361 13333512 2745b066b6a7be6805409dd781a36d1b ""
   "C:/Users/guasc/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1001775420 2900 1537cc8184ad1792082cd229ecc269f4 ""
@@ -49,6 +49,7 @@
   "C:/Users/guasc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb" 1247596667 35752 024fb6c41858982481f6968b5fc26508 ""
   "C:/Users/guasc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb" 1247596667 32722 d7379af29a190c3f453aba36302ff5a9 ""
   "C:/Users/guasc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb" 1247596666 33993 9b89b85fd2d9df0482bd47194d1d3bf3 ""
+  "C:/Users/guasc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1247596667 32569 5e5ddc8df908dea60932f3c484a54c0d ""
   "C:/Users/guasc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb" 1247596667 37944 359e864bd06cde3b1cf57bb20757fb06 ""
   "C:/Users/guasc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb" 1247596667 31099 342ef5a582aacbd3346f3cf4579679fa ""
   "C:/Users/guasc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb" 1247596666 24252 1e4e051947e12dfb50fee0b7f4e26e3a ""
@@ -233,11 +234,11 @@
   "assets/prr_1.0_greedy.png" 1774984031 630484 770a98f5a0514642bf784c0e98e4b6aa ""
   "assets/prr_1.0_infomap.png" 1774984031 630484 770a98f5a0514642bf784c0e98e4b6aa ""
   "assets/prr_1.0_louvain.png" 1774984033 630484 770a98f5a0514642bf784c0e98e4b6aa ""
-  "c:/Users/guasc/Documentos/MASTERS UPC/Q2/CN/Complex-Networks-MAI/Assignments/Assignment 2/report/main.tex" 1775819211 16408 44a79d71e3bbca170da316e038e633ef ""
-  "main.aux" 1775819244 12158 ae0d68c912c56540ab3996ec5eb53817 "pdflatex"
-  "main.bbl" 1775819230 1058 003b39e22f9c07a385657f6052fada36 "bibtex main"
-  "main.out" 1775819244 2034 e33dc14cdff4f73cc7b3f48faa3f2fb8 "pdflatex"
-  "main.tex" 1775819211 16408 44a79d71e3bbca170da316e038e633ef ""
+  "c:/Users/guasc/Documentos/MASTERS UPC/Q2/CN/Complex-Networks-MAI/Assignments/Assignment 2/report/main.tex" 1775843526 18848 1e9e63945d878c9b6e56f026035d16be ""
+  "main.aux" 1775843573 12203 17b9cf5b499ec618595287b27232107f "pdflatex"
+  "main.bbl" 1775843553 1058 003b39e22f9c07a385657f6052fada36 "bibtex main"
+  "main.out" 1775843573 2034 e33dc14cdff4f73cc7b3f48faa3f2fb8 "pdflatex"
+  "main.tex" 1775843526 18848 1e9e63945d878c9b6e56f026035d16be ""
   (generated)
   "main.aux"
   "main.log"
