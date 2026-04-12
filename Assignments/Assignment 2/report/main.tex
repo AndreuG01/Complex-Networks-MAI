@@ -381,6 +381,14 @@ The second aspect concerns granularity. The fact that the algorithm merges the t
 
 \section{A note on the alignment of communities}
 
+When comparing community-detection results across different networks (e.g.\ for different values of $p_{rr}$) or across different algorithmic settings, it is important to note that community labels are arbitrary. Most methods return a partition of the nodes, but the numerical identifiers assigned to each community (0, 1, 2, \dots) can be permuted without changing the partition itself. In our visualizations, however, each community is mapped to a color. Therefore, two very similar partitions can appear very different simply because the same community has been assigned a different label, which makes interpretation and comparison across figures a bit confusing.
+
+To aleviate this problem, we have aligned community labels before plotting. We use the functions \texttt{match\_ communities} and \texttt{reorder\_communities} (see \texttt{utils.py}) to match each community in a target partition to the most similar community in a reference partition. Similarity is quantified through the Jaccard overlap between node sets, $J(A,B)=\lvert A\cap B\rvert/\lvert A\cup B\rvert$, and communities are paired greedily while enforcing a one-to-one assignment. The target partition is then reordered according to this mapping so that, whenever possible, the same community is displayed with the same color across networks. This heuristic does not guarantee a perfect alignment, but it results in more consistent plots.
+
+Since this alignment step is only meant to improve the readability of the visualizations (and was not one of the main objectives of the practice), parts of the implementation supporting this functionality were generated with AI assistance and then reviewed and adapted to our use case.
+
+In the primary school experiment, we apply the same idea but using the ground-truth school groups as reference. In Figure~\ref{fig:primary_school_communities}, the detected communities (unweighted and weighted) are therefore relabeled to best match the original classes, so that colors are more consistent. A consequence of this alignment is that community identifiers become non consecutive (some labels in the reference have no matched detected community), which explains why the labels shown in Figure~\ref{fig:primary_school_communities} are not consecutive. For the same reason, Figures~\ref{fig:community_composition_unweighted} and~\ref{fig:community_composition_weighted} contain white ``empty bins'', as they correspond to label positions that remain unused after relabeling.
+
 \section{Conclusion}
 
 In this report, we have analyzed the performance of different community detection algorithms on both synthetic and real-world networks, highlighting the strengths and limitations of each approach.

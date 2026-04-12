@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex main"] 1775982616.3261 "main.aux" "main.bbl" "main" 1775982622.09112 0
+["bibtex main"] 1775982616.3261 "main.aux" "main.bbl" "main" 1775983776.76199 0
   "./references.bib" 1775922788.77319 1708 6c770a8c9de4e82d630f76a7f7c03864 ""
   "/usr/local/texlive/2025/texmf-dist/bibtex/bst/base/apalike.bst" 1292289607 24635 604dafcc79f521a11ea73e506e1fbd98 ""
-  "main.aux" 1775982621.90395 16950 92c0fe690f8082d1bcf7ef698d4cf611 "pdflatex"
+  "main.aux" 1775983776.57911 16950 92c0fe690f8082d1bcf7ef698d4cf611 "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1775982616.39376 "/Users/andreu/Documents/Master in Artificial Intelligence/First Year/Second Semester/Complex Networks/Practices/Assignments/Assignment 2/report/main.tex" "main.pdf" "main" 1775982622.09124 0
-  "/Users/andreu/Documents/Master in Artificial Intelligence/First Year/Second Semester/Complex Networks/Practices/Assignments/Assignment 2/report/main.tex" 1775982610.39721 29680 fcbe9a55c020743c884b1951e72bb8b4 ""
+["pdflatex"] 1775983771.02903 "/Users/andreu/Documents/Master in Artificial Intelligence/First Year/Second Semester/Complex Networks/Practices/Assignments/Assignment 2/report/main.tex" "main.pdf" "main" 1775983776.76211 0
+  "/Users/andreu/Documents/Master in Artificial Intelligence/First Year/Second Semester/Complex Networks/Practices/Assignments/Assignment 2/report/main.tex" 1775983770.84495 32167 b73599762bf07d36f652f7ecd06108a4 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1136849721 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/jknappen/ec/tcrm1000.tfm" 1136768653 1536 e07581a4bb3136ece9eeb4c3ffab8233 ""
@@ -246,10 +246,10 @@
   "assets/prr_1.0_louvain.png" 1775892966.4953 630484 87203264743a888d7fa1f80be3f74f29 ""
   "assets/unweighted_network_communities.png" 1775921585.27245 1080470 4c1518cd70a486367b9ae9197b30910c ""
   "assets/weighted_network_communities.png" 1775921585.01641 1085026 8637ca6bbff49e4042d37a6e94ae34a3 ""
-  "main.aux" 1775982621.90395 16950 92c0fe690f8082d1bcf7ef698d4cf611 "pdflatex"
+  "main.aux" 1775983776.57911 16950 92c0fe690f8082d1bcf7ef698d4cf611 "pdflatex"
   "main.bbl" 1775982616.39164 1365 1c3075a07e5e6afd1669074541a3c52b "bibtex main"
-  "main.out" 1775982621.90508 2738 b7a11b2f00ea094eac640c7edcb4d4e5 "pdflatex"
-  "main.tex" 1775982610.39721 29680 fcbe9a55c020743c884b1951e72bb8b4 ""
+  "main.out" 1775983776.58018 2738 b7a11b2f00ea094eac640c7edcb4d4e5 "pdflatex"
+  "main.tex" 1775983770.84495 32167 b73599762bf07d36f652f7ecd06108a4 ""
   (generated)
   "main.aux"
   "main.log"
