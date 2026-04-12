@@ -3,17 +3,36 @@
 \bibitem[Blondel et~al., 2008]{blondel2008fast}
 Blondel, V.~D., Guillaume, J.-L., Lambiotte, R., and Lefebvre, E. (2008).
 \newblock Fast unfolding of communities in large networks.
-\newblock {\em Journal of statistical mechanics: theory and experiment}, 2008(10):P10008.
+\newblock {\em Journal of statistical mechanics: theory and experiment},
+  2008(10):P10008.
 
 \bibitem[Clauset et~al., 2004]{clauset2004finding}
 Clauset, A., Newman, M.~E., and Moore, C. (2004).
 \newblock Finding community structure in very large networks.
-\newblock {\em Physical Review E—Statistical, Nonlinear, and Soft Matter Physics}, 70(6):066111.
+\newblock {\em Physical Review E—Statistical, Nonlinear, and Soft Matter
+  Physics}, 70(6):066111.
+
+\bibitem[Danon et~al., 2005]{danon2005comparing}
+Danon, L., Diaz-Guilera, A., Duch, J., and Arenas, A. (2005).
+\newblock Comparing community structure identification.
+\newblock {\em Journal of statistical mechanics: Theory and experiment},
+  2005(09):P09008--P09008.
+
+\bibitem[Fortunato, 2010]{fortunato2010community}
+Fortunato, S. (2010).
+\newblock Community detection in graphs.
+\newblock {\em Physics reports}, 486(3-5):75--174.
+
+\bibitem[Meil{\u{a}}, 2007]{meilua2007comparing}
+Meil{\u{a}}, M. (2007).
+\newblock Comparing clusterings—an information based distance.
+\newblock {\em Journal of multivariate analysis}, 98(5):873--895.
 
 \bibitem[Newman, 2004]{newman2004fast}
 Newman, M.~E. (2004).
 \newblock Fast algorithm for detecting community structure in networks.
-\newblock {\em Physical Review E—Statistical, Nonlinear, and Soft Matter Physics}, 69(6):066133.
+\newblock {\em Physical Review E—Statistical, Nonlinear, and Soft Matter
+  Physics}, 69(6):066133.
 
 \bibitem[Rosvall et~al., 2009]{rosvall2009map}
 Rosvall, M., Axelsson, D., and Bergstrom, C.~T. (2009).
@@ -21,8 +40,10 @@ Rosvall, M., Axelsson, D., and Bergstrom, C.~T. (2009).
 \newblock {\em The European Physical Journal Special Topics}, 178(1):13--23.
 
 \bibitem[Stehl{\'e} et~al., 2011]{stehle2011high}
-Stehl{\'e}, J., Voirin, N., Barrat, A., Cattuto, C., Isella, L., Pinton, J.-F., Quaggiotto, M., Van~den Broeck, W., R{\'e}gis, C., Lina, B., et~al. (2011).
-\newblock High-resolution measurements of face-to-face contact patterns in a primary school.
+Stehl{\'e}, J., Voirin, N., Barrat, A., Cattuto, C., Isella, L., Pinton, J.-F.,
+  Quaggiotto, M., Van~den Broeck, W., R{\'e}gis, C., Lina, B., et~al. (2011).
+\newblock High-resolution measurements of face-to-face contact patterns in a
+  primary school.
 \newblock {\em PloS one}, 6(8):e23176.
 
 \end{thebibliography}

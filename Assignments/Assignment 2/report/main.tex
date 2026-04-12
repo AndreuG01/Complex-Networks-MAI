@@ -229,7 +229,7 @@ Modularity alone is an not a reliable indicator of true community structure due 
     \label{fig:norm_var_information}
 \end{figure}
 
-We then compare the partitions found by the algorithms against the ground-truth partition. To do so, we use three standard measures for this purpose: Jaccard Index, Normalized Mutual Information and Normalized Variation of Information.
+To assess the accuracy of the community detection algorithms, we compare the resulting partitions to the ground-truth structure. This evaluation is performed using thre measures: the Jaccard Index \cite{fortunato2010community} (Figure~\ref{fig:jaccard}), Normalized Mutual Information \cite{danon2005comparing} (Figure~\ref{fig:norm_mutual_info}), and Normalized Variation of Information \cite{meilua2007comparing} (Figure~\ref{fig:norm_var_information}).
 
 
 \begin{figure}[H]
@@ -238,19 +238,19 @@ We then compare the partitions found by the algorithms against the ground-truth 
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{assets/prr_0.02_infomap.png} 
-        % \caption{$p_{rr} = 0.02$}
+        \caption{$p_{rr} = 0.02$}
         \label{fig:prr_002_infomap}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{assets/prr_0.16_infomap.png}
-        % \caption{$p_{rr} = 0.16$}
+        \caption{$p_{rr} = 0.16$}
         \label{fig:prr_016_infomap}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{assets/prr_1.0_infomap.png}
-        % \caption{$p_{rr} = 1.00$}
+        \caption{$p_{rr} = 1.00$}
         \label{fig:prr_100_infomap}
     \end{subfigure}
     
@@ -265,19 +265,19 @@ We then compare the partitions found by the algorithms against the ground-truth 
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{assets/prr_0.02_louvain.png} 
-        % \caption{$p_{rr} = 0.02$}
+        \caption{$p_{rr} = 0.02$}
         \label{fig:prr_002_louvain}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{assets/prr_0.16_louvain.png}
-        % \caption{$p_{rr} = 0.16$}
+        \caption{$p_{rr} = 0.16$}
         \label{fig:prr_016_louvain}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{assets/prr_1.0_louvain.png}
-        % \caption{$p_{rr} = 1.00$}
+        \caption{$p_{rr} = 1.00$}
         \label{fig:prr_100_louvain}
     \end{subfigure}
     
@@ -292,25 +292,37 @@ We then compare the partitions found by the algorithms against the ground-truth 
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{assets/prr_0.02_greedy.png} 
-        % \caption{$p_{rr} = 0.02$}
+        \caption{$p_{rr} = 0.02$}
         \label{fig:prr_002_greedy}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{assets/prr_0.16_greedy.png}
-        % \caption{$p_{rr} = 0.16$}
+        \caption{$p_{rr} = 0.16$}
         \label{fig:prr_016_greedy}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{assets/prr_1.0_greedy.png}
-        % \caption{$p_{rr} = 1.00$}
+        \caption{$p_{rr} = 1.00$}
         \label{fig:prr_100_greedy}
     \end{subfigure}
     
     \caption{Color-coded visualization of the detected communities by the Agglomerative Greedy algorithm}
     \label{fig:community_detection_greedy}
 \end{figure}
+
+For very low values of the intra-block connection probability ($p_{rr} \approx 0.0$), the network does not show a defined topological structure and behaves as a random graph. This lack of communities is reflected in the evaluation metrics (Figures~\ref{fig:jaccard}, \ref{fig:norm_mutual_info}, and \ref{fig:norm_var_information}): both the Jaccard Index and Normalized Mutual Information (NMI) are close to 0.0, while the Normalized Variation of Information (NVI) is near 1.0. 
+
+Visually, the network at $p_{rr} = 0.02$ (Figures~\ref{fig:prr_002_infomap}, \ref{fig:prr_002_louvain}, and \ref{fig:prr_002_greedy}) confirm this. Nodes in each of the five clusters are assigned to different communities, which is shown by a mixture of colors in each of the groups. At this point, the algorithms are grouping nodes into spurious communities rather than identifying true structural patterns.
+
+As the internal connection density increases ($0.05 < p_{rr} < 0.3$), the blocks begin be slighlty more defined, but the algorithms show different levels of ability to capture the real underlying structure. 
+
+On the one hand, Infomap demonstrates the best transition. After a brief interval around $p_{rr} = 0.08$ where it collapses all nodes into a single giant community (causing a drop in NMI to 0.0, as seen in Figure~\ref{fig:norm_mutual_info}), it then achieves perfect partition accuracy, reaching a Jaccard Index and NMI of 1.0 at around $p_{rr} = 0.12$. Louvain follows closely, reaching perfect accuracy near $p_{rr} = 0.15$. In contrast, the Agglomerative Greedy algorithm is the worst one in this aspect, requiring a density of almost $p_{rr} = 0.3$ to perfectly identify the ground truth communities.
+
+These differences between the algorithms are supported by the network snapshots at $p_{rr} = 0.16$. At this threshold, both Infomap (Figure~\ref{fig:prr_016_infomap}) and Louvain (Figure~\ref{fig:prr_016_louvain}) display uniformly colored, which correlate with their perfect metric scores. However, the Greedy algorithm's visualization (Figure~\ref{fig:prr_016_greedy}) still shows some misclassified nodes.
+
+Finally, for $p_{rr} \ge 0.3$, all three algorithms converge to perfect scores. The Jaccard Index and NMI flatten at their optimal values of 1.0, and the NVI remains at its minimum of 0.0, all of them until $p_{rr} = 1.0$. The visual representation at $p_{rr} = 1.0$ (Figures~\ref{fig:prr_100_infomap}, \ref{fig:prr_100_louvain}, and \ref{fig:prr_100_greedy}) fully corroborates this, displaying five perfectly partitioned communities with zero misclassifications, for all three methods. This confirms that once the internal links become dense enough, the community structure is so clear that even the algorithm which takes longest to converge, can identify the ground truth communities without any errors.
 
 
 \section{Task 2: Characterization of the community structure of real networks}
@@ -393,7 +405,7 @@ In the primary school experiment, we apply the same idea but using the ground-tr
 
 In this report, we have analyzed the performance of different community detection algorithms on both synthetic and real-world networks, highlighting the strengths and limitations of each approach.
 
-In the first task, using stochastic block model networks, we have observed that all three algorithms (Infomap, Louvain, and Agglomerative Greedy) successfully recover the ground-truth community structure when the intra-block connectivity is sufficiently high. However, their behavior differs significantly in sparse regimes. Methods based on modularity tend to detect artificial communities even in random-like networks, producing relatively high modularity values despite a meaningful structure missing. In contrast, Infomap is more conservative in these cases, often detecting a single community when no clear flow-based structure is present. These results emphasize that modularity alone is not a reliable indicator of true community structure and should be complemented with additional validation metrics.
+In the first task, using stochastic block model networks, we have observed that all three algorithms (Infomap, Louvain, and Agglomerative Greedy) successfully recover the ground-truth community structure when the intra-block connectivity is sufficiently high. However, their behavior differs significantly in sparse regimes. Methods based on modularity tend to detect artificial communities even in random-like networks, producing relatively high modularity values despite a meaningful structure missing. In contrast, Infomap is more conservative in these cases, often detecting a single community when no clear flow-based structure is present. As the network density increases, standard evaluation metrics (Jaccard, NMI, and NVI) confirm that Infomap is the most sensitive and fastest to perfectly capture the true underlying blocks. It is closely followed by Louvain, while the Greedy algorithm requires much denser internal connections to completely eliminate misclassifications. These results emphasize that modularity alone is not a reliable indicator of true community structure and should always be complemented with additional validation metrics.
 
 In the second task, the analysis of a real-world school contact network has shown how community detection algorithms can also be used to determine the underlying social organization of a group of people. The Louvain algorithm has identified communities at the grade level rather than the class level, revealing that interaction patterns are stronger within grades than within individual classes. Furthermore, the comparison between weighted and unweighted networks has been useful to understand how edge weights play can be important when improving the resolution of detected communities.
 
