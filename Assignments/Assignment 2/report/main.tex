@@ -379,12 +379,16 @@ The first is a matter of resolution. In the unweighted graph, every recorded con
  
 The second aspect concerns granularity. The fact that the algorithm merges the two sections of each grade into a single community is a property of the data, not an artifact of ignoring weights. This is directly supported by the contact matrices reported by Stehlé et al.\ \cite{stehle2011high}, who observe that \textit{``each class has more contacts with the other class of the same grade than with any other class''}, and that the contact matrices reveal \textit{``two-by-two light blocks around the diagonal''} reflecting high contact numbers and durations between classes from the same grade. Weights do not change this conclusion because the ratio of within-group to between-group contact time is not large enough to cross the modularity threshold needed for a further split. We therefore believe that the algorithm operating correctly as it finds the partition that best reflects the actual intensity of social interactions in the data.
 
+\section{A note on the alignment of communities}
 
-\section{Conclusions}
+\section{Conclusion}
 
-% In this report, we have shown how the structural descriptors provide powerful tools for understanding the organization of complex networks. By combining macroscopic and microscopic analyses, we have been able to distinguish between homogeneous and heterogeneous topologies, identify the presence of hubs, and evaluate the small-world properties. We have associated each network with its corresponding generative model, and the simulations generated suggest that these models have been correctly matched to their respective networks.
+In this report, we have analyzed the performance of different community detection algorithms on both synthetic and real-world networks, highlighting the strengths and limitations of each approach.
 
-% For the fifth network, a different approach has been followed, leading to the exploration of a model not covered in the theoretical lectures. In particular, a spatial model based on node positions has been proposed as a possible mechanism to generate the network.
+In the first task, using stochastic block model networks, we have observed that all three algorithms (Infomap, Louvain, and Agglomerative Greedy) successfully recover the ground-truth community structure when the intra-block connectivity is sufficiently high. However, their behavior differs significantly in sparse regimes. Methods based on modularity tend to detect artificial communities even in random-like networks, producing relatively high modularity values despite a meaningful structure missing. In contrast, Infomap is more conservative in these cases, often detecting a single community when no clear flow-based structure is present. These results emphasize that modularity alone is not a reliable indicator of true community structure and should be complemented with additional validation metrics.
+
+In the second task, the analysis of a real-world school contact network has shown how community detection algorithms can also be used to determine the underlying social organization of a group of people. The Louvain algorithm has identified communities at the grade level rather than the class level, revealing that interaction patterns are stronger within grades than within individual classes. Furthermore, the comparison between weighted and unweighted networks has been useful to understand how edge weights play can be important when improving the resolution of detected communities.
+
 
 \newpage
 \bibliography{references}

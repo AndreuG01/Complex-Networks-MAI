@@ -7,20 +7,9 @@ from matplotlib.lines import Line2D
 import numpy as np
 from utils import generate_colormap, match_communities, reorder_communities
 
-plt.rcParams.update({
-    "text.usetex": True,
-})
 
-
-DATA_PATH = "data"
-PRIMARY_SCHOOL_NETWORKS = "primary_school"
-PRIMARY_SCHOOL_WEIGHTED = "primaryschool_w.net"
-METADATA = "metadata_primary_school.txt"
-ASSETS = "assets"
-os.makedirs(ASSETS, exist_ok=True)
-
-def load_metadata():
-    metadata_path = os.path.join(DATA_PATH, PRIMARY_SCHOOL_NETWORKS, METADATA)
+def load_metadata(data_path, primary_school_networks, metadata_file):
+    metadata_path = os.path.join(data_path, primary_school_networks, metadata_file)
     metadata = {}
     with open(metadata_path, 'r') as f:
         for line in f.readlines()[1:]:
@@ -43,10 +32,10 @@ def metadata_to_communities(G, metadata):
     return node_to_group, communities
 
 
-PRIMARY_SCHOOL_UNWEIGHTED = "primaryschool_u.net"
 
 
-def detect_communities(G, use_weights=True):
+
+def detect_communities_primary(G, use_weights=True):
     if use_weights:
         communities = louvain_communities(G, weight="weight")
     else:
@@ -79,7 +68,7 @@ def draw_communities(G, pos, node_to_group, title, output_path, show_fig=False, 
 
     legend_handles = [
         Line2D([0], [0], marker="o", color="w", label=group, markerfacecolor=group_to_color[group], markersize=8)
-        for group in groups
+        for i, group in enumerate(groups)
     ]
 
     plt.figure(figsize=(7, 7))
@@ -93,7 +82,6 @@ def draw_communities(G, pos, node_to_group, title, output_path, show_fig=False, 
     plt.savefig(os.path.join(output_path, f"{title.replace(' ', '_').replace('(', '').replace(')', '').lower()}.png"), dpi=300, bbox_inches="tight")
     if show_fig:
         plt.show()
-
 
 
 def community_composition(communities, metadata):
@@ -137,52 +125,59 @@ def plot_composition(composition, title, output_path, show_fig=False):
         plt.show()
 
 
-if __name__ == "__main__":
-    weighted_path = os.path.join(DATA_PATH, PRIMARY_SCHOOL_NETWORKS, PRIMARY_SCHOOL_WEIGHTED)
-    unweighted_path = os.path.join(DATA_PATH, PRIMARY_SCHOOL_NETWORKS, PRIMARY_SCHOOL_UNWEIGHTED)
+def align_and_pad_communities(reference_comms, target_comms, mapping=None, n_communities=None):
+    if mapping is None:
+        mapping = match_communities(reference_comms, target_comms)
 
-    Gw = nx.read_pajek(weighted_path)
-    Gu = nx.read_pajek(unweighted_path)
+    if n_communities is None:
+        max_mapped = max(mapping.values()) if mapping else -1
+        n_communities = max(len(reference_comms), max_mapped + 1, len(target_comms))
 
-    metadata = load_metadata()
+    aligned = [set() for _ in range(n_communities)]
 
-    # Ensure simple graphs
-    if Gw.is_multigraph():
-        Gw = nx.Graph(Gw)
-    if Gu.is_multigraph():
-        Gu = nx.Graph(Gu)
+    for src_idx, comm in enumerate(target_comms):
+        dst_idx = mapping.get(src_idx, src_idx)
+        if dst_idx >= len(aligned):
+            aligned.extend([set() for _ in range(dst_idx - len(aligned) + 1)])
+        aligned[dst_idx].update(comm)
 
-    
-    for u, v, d in Gw.edges(data=True):
-        w = d["weight"]
-        d["inv_weight"] = 1.0 / w if w > 0 else 1.0
+    return aligned
 
-    pos = nx.kamada_kawai_layout(Gw, weight="inv_weight")
 
-    
-    node_to_comm_w, comms_w = detect_communities(Gw, use_weights=True)
-    node_to_comm_u, comms_u = detect_communities(Gu, use_weights=False)
+def best_match_mapping(reference_comms, target_comms):
+    reference_sets = [set(c) for c in reference_comms]
+    target_sets = [set(c) for c in target_comms]
 
-    aligned_u_to_w = match_communities(comms_w, comms_u)
-    node_to_comm_u_aligned = {
-        node: aligned_u_to_w.get(comm, comm)
-        for node, comm in node_to_comm_u.items()
-    }
+    mapping = {}
 
-    shared_cmap = generate_colormap()
-    shared_group_to_color = {
-        i: shared_cmap(i % shared_cmap.N)
-        for i in range(max(len(comms_w), len(comms_u)))
-    }
+    for i, target in enumerate(target_sets):
+        best_j = 0
+        best_score = -1.0
 
-    draw_communities(Gw, pos, node_to_comm_w, "Weighted Network Communities", ASSETS, group_to_color=shared_group_to_color)
-    draw_communities(Gu, pos, node_to_comm_u_aligned, "Unweighted Network Communities", ASSETS, group_to_color=shared_group_to_color)
+        for j, reference in enumerate(reference_sets):
+            union = len(target | reference)
+            if union == 0:
+                score = 0.0
+            else:
+                score = len(target & reference) / union
 
-    node_to_group, original_communities = metadata_to_communities(Gw, metadata)
-    draw_communities(Gw, pos, node_to_group, "Primary School Network (Original Communities)", ASSETS)
+            if score > best_score:
+                best_score = score
+                best_j = j
 
-    comp_w = community_composition(comms_w, metadata)
-    comp_u = community_composition(comms_u, metadata)
+        mapping[i] = best_j
 
-    plot_composition(comp_w, "Community Composition (Weighted)", ASSETS)
-    plot_composition(comp_u, "Community Composition (Unweighted)", ASSETS)
+    return mapping
+
+
+def ground_truth_communities_and_colors(G, metadata):
+    node_to_group, group_to_nodes = metadata_to_communities(G, metadata)
+
+    groups_sorted = sorted(group_to_nodes.keys())
+    gt_comms = [set(group_to_nodes[g]) for g in groups_sorted]
+
+    cmap = generate_colormap()
+    gt_group_to_color = {g: cmap(i % cmap.N) for i, g in enumerate(groups_sorted)}
+    gt_idx_to_color = {i: cmap(i % cmap.N) for i in range(len(groups_sorted))}
+
+    return node_to_group, gt_comms, gt_group_to_color, gt_idx_to_color

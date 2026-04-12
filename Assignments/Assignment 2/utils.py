@@ -16,6 +16,7 @@ def extract_filename_info(filename: str) -> dict:
     return res
 
 def generate_colormap():
+    # Custom color palette generated with AI tools, and refined to ensure good contrast and visibility for community visualization.
     colors = [
         "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF",
         "#00FFFF", "#FFA500", "#800080", "#008000", "#800000",
@@ -29,25 +30,25 @@ def generate_colormap():
     
     
 def match_communities(reference_comms, target_comms):
-    ref_sets = [set(c) for c in reference_comms]
-    tgt_sets = [set(c) for c in target_comms]
+    reference_sets = [set(c) for c in reference_comms]
+    target_sets = [set(c) for c in target_comms]
 
     mapping = {}
-    used_ref = set()
+    used_reference = set()
 
-    for i, tgt in enumerate(tgt_sets):
+    for i, target in enumerate(target_sets):
         best_j = None
         best_score = -1.0
 
-        for j, ref in enumerate(ref_sets):
-            if j in used_ref:
+        for j, reference in enumerate(reference_sets):
+            if j in used_reference:
                 continue
 
-            union = len(tgt | ref)
+            union = len(target | reference)
             if union == 0:
                 continue
 
-            score = len(tgt & ref) / union
+            score = len(target & reference) / union
 
             if score > best_score:
                 best_score = score
@@ -55,7 +56,7 @@ def match_communities(reference_comms, target_comms):
 
         if best_j is not None:
             mapping[i] = best_j
-            used_ref.add(best_j)
+            used_reference.add(best_j)
         else:
             mapping[i] = i
 
@@ -74,3 +75,39 @@ def reorder_communities(reference_comms, target_comms):
         reordered[new_idx] = comm
 
     return [c for c in reordered if c is not None]
+
+
+def save_partition_to_clu(G, communities, filepath):
+    nodes_sorted = sorted(G.nodes(), key=lambda x: int(x))
+    node_to_comm = {}
+
+    for comm_idx, comm in enumerate(communities, start=1):
+        for node in comm:
+            node_to_comm[str(node)] = comm_idx
+
+    with open(filepath, "w") as f:
+        f.write(f"*Vertices {len(nodes_sorted)}\n")
+        for node in nodes_sorted:
+            f.write(f"{node_to_comm[str(node)]}\n")
+
+
+def load_partition_from_clu(G, filepath):
+    nodes_sorted = sorted(G.nodes(), key=lambda x: int(x))
+
+    with open(filepath, "r") as f:
+        lines = f.readlines()
+
+    # Skip header (*Vertices N)
+    labels = [int(line.strip()) for line in lines[1:]]
+
+    if len(labels) != len(nodes_sorted):
+        raise ValueError("Mismatch between number of nodes and labels in .clu file")
+
+    communities_dict = {}
+    for node, comm_id in zip(nodes_sorted, labels):
+        if comm_id not in communities_dict:
+            communities_dict[comm_id] = []
+        communities_dict[comm_id].append(node)
+
+    communities = list(communities_dict.values())
+    return communities
