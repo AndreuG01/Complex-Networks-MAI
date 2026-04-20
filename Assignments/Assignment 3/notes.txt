@@ -1,0 +1,1 @@
+Fem N realizations. Per cada realization (simulació) calcular el average fraction of infected nodes RHO (per timestep). Finalment, calcular el avg fraction of infected nodes RHO de totes les mitjanes de cada timestep.
