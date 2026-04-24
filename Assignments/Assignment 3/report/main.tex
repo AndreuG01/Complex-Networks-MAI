@@ -66,6 +66,10 @@
 
 \section{Introduction}
 
+Understanding how diseases, information, or computer viruses spread through interconnected systems is a central challenge in network science. The topology of a network dictates the dynamics of any spreading process operating upon it. In this project we explore these dynamics using the Susceptible-Infected-Susceptible (SIS) model, a standard compartmental framework used to study pathogens that do not confer long-lasting immunity.
+
+This task has three main objectives. First, we aim to analyze how different network architectures influence epidemic outbreaks by comparing random Erdös-Rényi (ER) networks against scale-free Barabási-Albert (BA) networks across different average degrees and recovery probabilities. Second, we validate empirical Monte Carlo simulations against two theoretical frameworks: the Microscopic Markov Chain Approach (MMCA) and the Quenched Mean Field (QMF) model, evaluating their accuracy in predicting both the epidemic threshold and the stationary infection density. Finally, because large-scale stochastic simulations are highly computationally demanding, we address the practical challenges of network modeling. We propose an optimized algorithmic approach and compare the computational efficiency of interpreted execution (Python) versus compiled execution (C++) to achieve significant performance improvements.
+
 \section{The SIS model}
 
 The Susceptible-Infected-Susceptible (SIS) model is one of the simplest compartmental models for epidemic spreading. Each node in the network occupies one of two states at any given time:
@@ -134,7 +138,7 @@ Algorithm~\ref{alg:sis_naive} shows the straightforward implementation. At each 
 
 The parameters used throughout this work are $N_{\text{rep}} = 100$, $R_0 = 0.2$, $T_{\max} = 1000$, and $T_{\text{trans}} = 900$, giving 100 post-transient steps per realisation.
 
-\subsection{Microscopic Markov Chain Approach (MMCA)}
+\subsection{Microscopic Markov Chain Approach (MMCA)}\label{mmca}
 \textcolor{red}{AIXÒ S'HA DE REVISAR, ESTÀ EXTRET DE LA INFO DEL CHAT. SEGONS EL QUE HI HA IMPLEMENTAT, AQUEST S'AJUSTA MÉS A LES NOSTRES DADES}
 The MMCA \cite{gomez2010discrete} provides a deterministic approximation to the SIS dynamics by tracking, for each node $i$, the probability $\rho_i^{(t)}$ of being infected at time $t$. The update equation is obtained by writing the Markov transitions exactly:
 \begin{equation}
@@ -162,9 +166,9 @@ Linearizing the update equation around $\rho = 0$ shows that the endemic fixed p
     \beta_c^{\text{MMCA}} = \frac{\mu}{\lambda_{\max}(A)}.
 \end{equation}
 
-\subsection{Quenched Mean Field (QMF)}
+\subsection{Quenched Mean Field (QMF)}\label{qmf}
 \textcolor{red}{AIXÒ S'HA DE REVISAR, ESTÀ EXTRET DE LA INFO DEL CHAT.}
-The QMF approach \cite{wang2003epidemic,chakrabarti2008epidemic} also retains the full adjacency matrix but replaces the product infection probability with a linear mean-field approximation. Writing the continuous-time rate equation:
+The QMF approach \cite{wang2003epidemic,chakrabarti2008epidemic} (often referred to as the Nonlinear Dynamical System (NLDS) approach in the literature) also retains the full adjacency matrix but replaces the product infection probability with a linear mean-field approximation. Writing the continuous-time rate equation:
 \begin{equation}
     \frac{d\rho_i}{dt} = -\mu\rho_i + \beta(1-\rho_i)\sum_j A_{ij}\rho_j,
 \end{equation}
@@ -185,7 +189,9 @@ Because QMF linearizes the infection probability, it overestimates $\rho$ relati
 \section{Networks used}
 All experiments are conducted on four networks of $N = 1000$ nodes generated with fixed random seeds for reproducibility.
 
-\textbf{Erdös--Rényi (ER).} In an ER graph $G(N,p)$ each pair of nodes is connected independently with probability $p$. Choosing $p = \langle k \rangle / (N-1)$ targets a given average degree $\langle k \rangle$. The degree distribution follows a Poisson distribution centred on $\langle k \rangle$. The spectral radius satisfies $\lambda_{\max} \approx \langle k \rangle$, and the epidemic threshold scales as $\beta_c \approx \mu / \langle k \rangle$ (Equation 8 in \cite{gomez2010discrete})\textcolor{red}{Aquesta equació més o manco quadra amb els resultats obtinguts. A les comparacions amb els models teòrics, MMCA és més precís que QMF}.
+\textbf{Erdös--Rényi (ER).} In an ER graph $G(N,p)$ each pair of nodes is connected independently with probability $p$. Choosing $p = \langle k \rangle / (N-1)$ targets a given average degree $\langle k \rangle$. The degree distribution follows a Poisson distribution centred on $\langle k \rangle$. The spectral radius satisfies $\lambda_{\max} \approx \langle k \rangle$, and the epidemic threshold scales as $\beta_c \approx \mu / \langle k \rangle$ (Equation 8 in \cite{gomez2010discrete})
+
+%\textcolor{red}{Aquesta equació més o manco quadra amb els resultats obtinguts. A les comparacions amb els models teòrics, MMCA és més precís que QMF}.
 
 \textbf{Barabási--Albert (BA).} BA graphs are grown by preferential attachment. Each new node attaches $m$ edges to existing nodes with probability proportional to their current degree, producing a power-law degree distribution $P(k) \sim k^{-3}$. $\beta_c$ is lower compared to ER graphs with the same average degree.
 
@@ -210,6 +216,90 @@ BA $\langle k\rangle=6$ & 1000 & 2991 & 5.98 & 14.237 & 0.0140 & 0.0281 \\
 Two key observations can be derived from \Cref{tab:networks}. First, for the same $\langle k \rangle$, BA networks have a much larger $\langle k^2 \rangle$ and $\lambda_{\max}$ than ER networks, reflecting the presence of high-degree hubs. This translates directly into a lower $\beta_c$: BA networks are considerably more vulnerable to epidemic spreading than their ER counterparts. Second, increasing $\langle k \rangle$ from 4 to 6 increases $\lambda_{\max}$ in both models, again lowering the threshold.
 
 \section{Results and Discussion}
+
+In this section we evaluate the results of our epidemic spreading models. We first explore how the underlying network topologies and parameters affect the spread of a disease using stochastic Monte Carlo simulations. Then, we assess the accuracy of theoretical models by comparing their predictions to our empirical data.
+
+\subsection{Epidemic spreading: ER vs. BA networks}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/results_plot_graph-all_k-all_mu-0.2_mode-cpp.png}
+        \caption{Recovery probability $\mu = 0.2$}
+        \label{fig:er_ba_mu02}
+    \end{subfigure}
+    \hfill 
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/results_plot_graph-all_k-all_mu-0.4_mode-cpp.png}
+        \caption{Recovery probability $\mu = 0.4$}
+        \label{fig:er_ba_mu04}
+    \end{subfigure}
+    
+    \caption{Comparison of the stationary infection density $\rho$ as a function of the transmission probability $\beta$ for Erdös-Rényi (ER) and Barabási-Albert (BA) networks. Each plot illustrates the epidemic spreading dynamics across networks with average degrees $\langle k \rangle = 4$ and $\langle k \rangle = 6$, generated via Monte Carlo simulations.}
+    \label{fig:comparison_er_ba}
+\end{figure}
+
+
+Figure~\ref{fig:comparison_er_ba} shows the stationary infection density $\rho$ as a function of the transmission probability $\beta$, comparing the Erdös-Rényi (ER) and Barabási-Albert (BA) networks for two different aveage degrees $\langle k \rangle \in \{4, 6\}$ and two recovery probabilities $\mu \in \{0.2, 0.4\}$.
+
+The main difference between the two network topologies is the start of the epidemic outbreak. For any value of $\langle k \rangle$ and $\mu$, the transmission probability $\beta$ needed to trigger an epidemic is much smaller in BA than in ER networks. In particular, looking at Figure~\ref{fig:comparison_er_ba} ($\mu = 0.2$), the BA network with $\langle k \rangle = 6$ begins to show a non-zero infection density at $\beta \approx 0.014$, while the corresponding ER network does so later, at $\beta \approx 0.020$. This perfectly aligns with the theoretical predictions for the epidemic threshold ($\beta_c$) calculated from the spectral radius in Table~\ref{tab:networks}.
+
+This difference is mainly due to the degree distributions of each of the networks. On the one hand, ER networks have a Poisson degree distribution, meaning that most nodes have a degree very similar to the average $\langle k \rangle$. On the other hand, BA networks are generated through preferential attachment, which results in a power-law distribution characterized by the presence of hubs. These high-degree nodes are the main responsibles for the fast spread of the disease. Given their high degree, they are more likely to become infected early in the dynamics, and to quickly transmit the disease to a large number of neighbours. Therefore, BA networks are more vulnerable to epidemic spreading, allowing even diseases with low infectivity to survive. 
+
+Within the same network model (ER or BA), increasing the average degree from $\langle k \rangle = 4$ to $\langle k \rangle = 6$, produces a shift the epidemic curve to the left. In a denser network, individuals have more contacts, which provides the disease with more opportunities to spread.. As a result, a lower critical transmission probability ($\beta_c$) is needed to trigger an epidemic, leading to a higher stationary infection density ($\rho$) for any given value of $\beta$.
+
+Regarding the effect of the recovery probability, we compare Figure~\ref{fig:er_ba_mu02} ($\mu = 0.2$) and Figure~\ref{fig:er_ba_mu04} ($\mu = 0.4$). When $\mu$ is doubled, it means that individuals are able to recover from the disease twice as fast. To compensate for the shorter infectious period and to maintain a stationary endemic state, the transmission probability $\beta$ must also double. This shifts all the epidemic curves to the right, delaying the onset of the epidemic but still maintaining the structural differences between ER and BA topologies.
+
+\begin{figure}[htbp]
+    \centering
+    
+    \includegraphics[width=0.8\textwidth]{assets/results_plot_graph-all_k-all_mu-all_mode-cpp.png}
+
+    \caption{Global comparison of epidemic spreading dynamics for all eight experimental combinations, considering network topology (ER vs. BA), average degree ($\langle k \rangle \in \{4, 6\}$), and recovery probability ($\mu \in \{0.2, 0.4\}$).}
+    \label{fig:global_summary}
+\end{figure}
+
+Finally, Figure \ref{fig:global_summary} provides a visual summary by overlaying all eight experimental combinations on a single plot. This combined plot makes it easy to compare the overall risk. By looking at the order of the curves from left to right, we can clearly tell which setup is the most vulnerable to an epidemic and which is the most resistant. The network most vulnerable to an epidemic is the BA network with a higher average degree and a lower recovery probability (BA, $\langle k \rangle=6$, $\mu=0.2$), while the most robust is the ER network with a lower average degree and a higher recovery probability (ER, $\langle k \rangle=4$, $\mu=0.4$). 
+
+Moreover, the plot highlights the relative importance of each variable. While doubling the recovery rate ($\mu$) delays the outbreak, switching the network structure from ER to BA has a much larger effect on the epidemic threshold. This demonstrates that the underlying network topology is the primary factor for disease vulnerability.
+
+Finally, although the two topologies behave very differently at the start of an outbreak, they converge at high infection rates. As the transmission probability ($\beta$) approaches 0.30 (from $\approx 0.15$ onwards), the curves for the ER and BA networks overlap almost entirely. This indicates that when a disease is highly contagious, the overall infection density saturates, making the specific network structure less relevant.
+
+\subsection{Theoretical models vs. Monte Carlo simulations}
+
+
+\begin{figure}[htbp]
+    \centering
+    % First subfigure (BA)
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/results_plot_graph-ba_k-6_mu-0.2_mode-cpp_theory.png}
+        \caption{BA network ($\langle k \rangle = 6$, $\mu=0.2$)}
+        \label{fig:ba_theoretical}
+    \end{subfigure}
+    \hfill 
+    % Second subfigure (ER)
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{assets/results_plot_graph-er_k-6_mu-0.2_mode-cpp_theory.png}
+        \caption{ER network ($\langle k \rangle = 6$, $\mu=0.2$)}
+        \label{fig:er_theoretical}
+    \end{subfigure}
+    
+    \caption{Comparison of the stationary infection density $\rho$ obtained from Monte Carlo simulations (C++) against theoretical predictions from the MMCA and QMF models. The plots show the dynamics as a function of the transmission probability $\beta$ for a fixed recovery probability $\mu = 0.2$.}
+    \label{fig:theoretical_vs_experimental}
+\end{figure}
+
+In order to validate the empirical results of our epidemic spread model, we compare the infection density $\rho$ obtained from the Monte Carlo simluations against the theoretical predictions of the MMCA and QMF models. Figure~\ref{fig:theoretical_vs_experimental} shows the comparison for BA and ER networks with fixed average degree of $\langle k \rangle = 6$ and also fixed recovery probability $\mu = 0.2$.  We focus on this particular setup to provide a clear and direct comparison. Modifying the network hyperparameters ($\langle k \rangle$ or $\mu$) shifts the exact placement of the epidemic curves, but it does not alter the behavior or the relative accuracy of the theoretical models discussed in this section.
+
+The first thing we can notice is the perfect alignment of the epidemic threshold. As stated in Sections~\ref{mmca} and \ref{qmf}, both theoretical models (MMCA and QMF) calculate the critical onset point of an epidemic in the same way ($\beta_c = \mu / \lambda_{max}$). In both subfigures, the Monte Carlo simulation transitions from a healthy, disease-free state to an infected state ($\rho > 0$) exactly at this predicted theoretical value, which confirms the accuracy of the theoretical calculations for both types of networks.
+
+Although the QMF model accurately predicts the starting point of the epidemic, it overestimates the infection density ($\rho$) as the transmission probability ($\beta$) increases. We can see this gap get wider in both networks at higher values of $\beta$. This overestimation happens because the QMF model simplifies the mathematical dynamics. In particular, it assumes that the infection states of neighboring nodes are completely independent. In a real scenario, if a disease is widespread, an infected node's neighbors are also likely to be sick. By ignoring these local clusters (dynamical correlations), the QMF model assumes there are always plenty of susceptible neighbors to infect, which inflates the predicted size of the epidemic.
+
+In contrast, the MMCA model matches the Monte Carlo results very closely across the whole range of $\beta$. This high accuracy comes from how the model is mathematically structured. Instead of using a linear approximation (like QMF does), MMCA calculates the exact probability that a healthy node avoids getting infected from each of its neighbours. Since probabilities are evaluated for each individual node and without any mathematical shortcuts, MMCA is able to capture the spreading dynamics much more realistically. We can say that it serves as an accurate theoretical upper bound for real-world simulations.
+
 
 \section{Code Efficiency}
 
@@ -296,6 +386,14 @@ Despite the algorithmic differences described above, the three implementations a
 \end{figure}
 
 \section{Conclusion}
+
+This project shows the impact that network topology has on epidemic dynamics, while highlighting the computational requirements of simulating such complex systems.
+
+From a structural perspective, our results confirm that Barabási-Albert networks are more vulnerable to epidemic spreading than Erdös-Rényi networks. The preferential attachment mechanism of BA networks generates a power-law degree distribution with extreme hubs. These highly connected nodes act as the big spreaders of the infection, lowering the epidemic threshold ($\beta_c$) and allowing even weak pathogens to survive. Moreover, increasing the network density ($\langle k \rangle$) across both topologies provides additional transmission pathways, facilitating the spread of the disease. In contrast, a higher recovery probability ($\mu$) proportionally increases the transmission rate required to maintain the infection.
+
+Regarding the theoretical models, both MMCA and QMF accurately predict the critical epidemic threshold. However, QMF overestimates the total outbreak size because it oversimplifies the mathematical interactions between neighboring nodes. In contrast, MMCA evaluates these infection probabilities exactly, allowing it to capture the local spreading dynamics much more accurately. As a result, MMCA closely matches the empirical Monte Carlo simulations and provides a reliable theoretical upper bound for both network topologies.
+
+Finally, while computational efficiency was not the primary focus of this project, our implementation highlights its practical importance. By optimizing the simulation algorithm and porting it to a compiled language (C++), we achieved a $\sim\!46\times$ speedup. This reduced the total runtime from nearly 15 hours to under 20 minutes, demonstrating that efficient code is essential for making large-scale stochastic modeling feasible
 
 
 
