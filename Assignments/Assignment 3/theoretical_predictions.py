@@ -1,30 +1,4 @@
-#TODO: review
-"""
-Theoretical predictions for SIS epidemic spreading on quenched networks.
-
-MMCA (Microscopic Markov Chain Approach)
------------------------------------------
-Per-node update at each iteration:
-    rho_i <- rho_i * (1 - mu) + (1 - rho_i) * [1 - prod_{j in N(i)} (1 - beta * rho_j)]
-
-The product is evaluated efficiently via the log-sum trick:
-    prod_{j} (1 - beta*rho_j) = exp( A @ log(1 - beta*rho) )
-
-QMF (Quenched Mean Field)
---------------------------
-Steady-state condition:  mu * rho_i = beta * (1 - rho_i) * (A @ rho)_i
-Solved by the self-consistent iteration:
-    rho_i <- beta * theta_i / (mu + beta * theta_i),  theta = A @ rho
-
-Epidemic threshold (both approaches linearize to the same condition):
-    beta_c = mu / lambda_max(A)
-
-Results are saved to results/<graph>_mu_<mu>_theoretical.csv with columns:
-    beta, rho_mmca, rho_qmf, beta_c
-"""
-
 import os
-
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -105,11 +79,11 @@ def main() -> None:
 
         A = build_sparse_adj(G)
         lmax = spectral_radius(A)
-        print(f"  lambda_max = {lmax:.4f}")
+        print(f"lambda_max = {lmax:.4f}")
 
         for mu in mus:
             beta_c = mu / lmax
-            print(f"  mu={mu}  beta_c={beta_c:.4f}")
+            print(f"mu={mu}  beta_c={beta_c:.4f}")
 
             rows = []
             for beta in betas:
@@ -121,13 +95,13 @@ def main() -> None:
                     "rho_qmf": rho_q,
                     "beta_c": beta_c,
                 })
-                print(f"    beta={beta:.2f}  rho_mmca={rho_m:.4f}  rho_qmf={rho_q:.4f}")
+                print(f"beta={beta:.2f}  rho_mmca={rho_m:.4f}  rho_qmf={rho_q:.4f}")
 
             out = os.path.join(RESULTS_DIR, f"{name}_mu_{mu}_theoretical.csv")
             pd.DataFrame(rows).to_csv(out, index=False)
-            print(f"  -> {out}")
+            print(f"-> {out}")
 
-    print("\nDone.")
+    print("Done.")
 
 
 if __name__ == "__main__":

@@ -139,7 +139,6 @@ Algorithm~\ref{alg:sis_naive} shows the straightforward implementation. At each 
 The parameters used throughout this work are $N_{\text{rep}} = 100$, $R_0 = 0.2$, $T_{\max} = 1000$, and $T_{\text{trans}} = 900$, giving 100 post-transient steps per realisation.
 
 \subsection{Microscopic Markov Chain Approach (MMCA)}\label{mmca}
-\textcolor{red}{AIXÒ S'HA DE REVISAR, ESTÀ EXTRET DE LA INFO DEL CHAT. SEGONS EL QUE HI HA IMPLEMENTAT, AQUEST S'AJUSTA MÉS A LES NOSTRES DADES}
 The MMCA \cite{gomez2010discrete} provides a deterministic approximation to the SIS dynamics by tracking, for each node $i$, the probability $\rho_i^{(t)}$ of being infected at time $t$. The update equation is obtained by writing the Markov transitions exactly:
 \begin{equation}
     \rho_i^{(t+1)} = \rho_i^{(t)}(1-\mu) + \bigl(1 - \rho_i^{(t)}\bigr) \left[1 - \prod_{j \in \mathcal{N}(i)}\!\bigl(1 - \beta\rho_j^{(t)}\bigr)\right].
@@ -167,7 +166,6 @@ Linearizing the update equation around $\rho = 0$ shows that the endemic fixed p
 \end{equation}
 
 \subsection{Quenched Mean Field (QMF)}\label{qmf}
-\textcolor{red}{AIXÒ S'HA DE REVISAR, ESTÀ EXTRET DE LA INFO DEL CHAT.}
 The QMF approach \cite{wang2003epidemic,chakrabarti2008epidemic} (often referred to as the Nonlinear Dynamical System (NLDS) approach in the literature) also retains the full adjacency matrix but replaces the product infection probability with a linear mean-field approximation. Writing the continuous-time rate equation:
 \begin{equation}
     \frac{d\rho_i}{dt} = -\mu\rho_i + \beta(1-\rho_i)\sum_j A_{ij}\rho_j,

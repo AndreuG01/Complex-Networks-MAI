@@ -46,9 +46,9 @@ double SIS_simulation_optimized(
     double beta,
     double mu,
     std::mt19937& rng,
-    int N_rep   = 100,
-    double R0   = 0.2,
-    int T_max   = 1000,
+    int N_rep = 100,
+    double R0= 0.2,
+    int T_max= 1000,
     int T_trans = 900
 ) {
     const int N = g.N;
@@ -123,10 +123,10 @@ double SIS_simulation_optimized(
 
 
 int main() {
-    const int    N_rep   = 100;
-    const double R0      = 0.2;
-    const int    T_max   = 1000;
-    const int    T_trans = 900;
+    const int N_rep = 100;
+    const double R0 = 0.2;
+    const int T_max = 1000;
+    const int T_trans = 900;
 
     std::mt19937 rng(42);
 
@@ -143,14 +143,14 @@ int main() {
     for (const auto& graph_name : graph_names) {
         std::cout << "\n=== " << graph_name << " ===\n";
         Graph g = read_graph("networks/" + graph_name + ".txt");
-        std::cout << "  N=" << g.N << "\n";
+        std::cout << "N=" << g.N << "\n";
 
         for (auto& [mu, mu_str] : mus) {
             std::string out_path = "results/" + graph_name + "_mu_" + mu_str + "_cpp.csv";
             std::ofstream csv(out_path);
             csv << "beta,rho,time_seconds\n";
 
-            std::cout << "  mu=" << mu_str << "\n";
+            std::cout << "mu=" << mu_str << "\n";
 
             for (double beta : betas) {
                 auto t0 = std::chrono::high_resolution_clock::now();
@@ -161,15 +161,14 @@ int main() {
                 csv << std::fixed << std::setprecision(6)
                     << beta << "," << rho << "," << elapsed << "\n";
 
-                std::cout << "    beta=" << std::fixed << std::setprecision(2) << beta
-                          << "  rho=" << std::fixed << std::setprecision(4) << rho
-                          << "  t=" << std::fixed << std::setprecision(2) << elapsed << "s\n";
+                std::cout << "beta=" << std::fixed << std::setprecision(2) << beta
+                          << "rho=" << std::fixed << std::setprecision(4) << rho
+                          << "t=" << std::fixed << std::setprecision(2) << elapsed << "s\n";
             }
 
             std::cout << "  -> " << out_path << "\n";
         }
     }
 
-    std::cout << "\nDone.\n";
     return 0;
 }
